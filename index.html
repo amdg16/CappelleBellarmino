@@ -78,12 +78,13 @@
   .dots button.on::before{background:var(--red)}
   .grid{display:grid;position:relative;
     grid-template-columns:var(--timew) repeat(var(--cols),minmax(var(--colw),1fr));
-    grid-template-rows:3.4rem repeat(var(--n),var(--row))}
+    grid-template-rows:auto repeat(var(--n),var(--row))}
   .corner,.ch{position:sticky;top:0;z-index:3;background:var(--paper);border-bottom:2px solid var(--red)}
   .corner{left:0;z-index:4}
-  .ch{grid-row:1;padding:.35rem .5rem;border-left:1px solid var(--rule);line-height:1.15}
-  .ch b{display:block;font-weight:700;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ch small{display:block;color:var(--muted);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ch{grid-row:1;padding:.4rem .5rem .45rem;border-left:1px solid var(--rule);line-height:1.15;overflow-wrap:break-word;hyphens:auto}
+  .ch b{display:block;font-weight:700;font-size:.92rem}
+  .ch small{display:block;color:var(--muted);font-size:.78rem;margin-top:.1rem}
+  .ch small.x{font-style:italic;color:#4A4142}
   .tm{grid-column:1;position:sticky;left:0;z-index:2;background:var(--paper);font-size:.8rem;color:var(--muted);
       padding-right:.35rem;text-align:right;transform:translateY(-.45rem)}
   .tm.hr{color:var(--ink);font-weight:700}
@@ -123,7 +124,7 @@
     padding:.6rem .9rem;border-radius:.6rem;font-size:.9rem;max-width:92vw;opacity:0;pointer-events:none;transition:opacity .2s}
   #toast.show{opacity:1}
   @media (max-width:600px){
-    :root{--colw:6.8rem;--timew:2.9rem}
+    :root{--colw:7.3rem;--timew:2.9rem} .ch{padding-left:.4rem;padding-right:.35rem} .ch b{font-size:.86rem}
     .band{padding-left:.7rem;padding-right:.7rem;gap:.6rem} .band img{height:2.6rem}
     .band small{font-size:.75rem} .gear .code{display:none}
     .dateRow,.bar,.floors,.sync{padding-left:.6rem;padding-right:.6rem} .openNote{margin-left:.6rem;margin-right:.6rem} .gridWrap{margin:0 .25rem .25rem}
@@ -516,7 +517,7 @@ function render(){
   if (!note.hidden) note.textContent = T('notYet', { d: plainDate(openDateFor(current)), t: openTime() });
   let h = '<div class="corner"></div>';
   vis.forEach(({ c }, k) => {
-    h += `<div class="ch" style="grid-column:${k+2}"><b>${esc(c.short)}</b><small>${esc(floorText(c))}</small></div>`;
+    h += `<div class="ch" style="grid-column:${k+2}"><b>${esc(c.short)}</b><small>${esc(T('f' + c.floor))}</small>${c.extra ? `<small class="x">${esc(c.extra)}</small>` : ''}</div>`;
   });
   for (let s = 0; s < N; s++){
     const t = START + s*STEP, row = s + 2;
