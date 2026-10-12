@@ -33,18 +33,20 @@
   /* Intestazione rossa con lo stemma */
   .band{background:var(--red);color:#fff;padding:calc(env(safe-area-inset-top,0px) + .8rem) 1rem .8rem;display:flex;align-items:center;gap:.9rem}
   .band .txt{flex:1;min-width:0}
-  .datepick{position:relative;display:inline-flex;align-items:baseline;gap:.35rem;border:0;background:none;color:#fff;padding:0;cursor:pointer;text-align:left}
-  .datepick .caret{font-size:.9rem;opacity:.8}
+  .band .site{font:700 clamp(1.5rem,5.5vw,2.2rem)/1.05 "Cormorant Garamond",Georgia,serif;margin-top:.05rem}
+  .dateRow{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem 1rem .1rem}
+  .datepick{position:relative;display:inline-flex;align-items:baseline;gap:.4rem;border:0;background:none;color:var(--ink);padding:0;cursor:pointer;text-align:left;min-width:0}
+  .datepick .caret{font-size:1rem;color:var(--red)}
+
   #date{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
   .gear{flex:none;align-self:flex-start;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;border-radius:.5rem;padding:.3rem .55rem;min-height:2.3rem;cursor:pointer;font-size:.9rem}
   .band img{height:3.4rem;width:auto;flex:none}
   .band small{display:block;font-size:.85rem;opacity:.85;letter-spacing:.02em}
-  .band .day{display:block;margin:.1rem 0 0;font:700 clamp(1.4rem,6vw,2.4rem)/1.05 "Cormorant Garamond",Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .datepick{max-width:100%}
+  .day{display:block;font:700 clamp(1.6rem,6.5vw,2.4rem)/1.1 "Cormorant Garamond",Georgia,serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .langs{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem}
   .langs button{border:1px solid var(--rule-strong);background:#fff;border-radius:.5rem;min-height:2.6rem;cursor:pointer}
 
-  .bar{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;padding:.6rem 1rem .4rem}
+  .bar{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;padding:.4rem 1rem .4rem}
   .bar button{border:1px solid var(--rule-strong);background:var(--paper);border-radius:.5rem;padding:.3rem .55rem;min-height:2.3rem;cursor:pointer;font-size:1rem}
   .bar .sq{min-width:2.3rem;padding:0 .35rem;line-height:1}
   .bar .spacer{flex:1}
@@ -111,7 +113,7 @@
     :root{--colw:6.8rem;--timew:2.9rem}
     .band{padding-left:.7rem;padding-right:.7rem;gap:.6rem} .band img{height:2.6rem}
     .band small{font-size:.75rem} .gear .code{display:none}
-    .bar,.floors,.sync{padding-left:.6rem;padding-right:.6rem} .scroller{margin:0 .25rem .25rem}
+    .dateRow,.bar,.floors,.sync{padding-left:.6rem;padding-right:.6rem} .scroller{margin:0 .25rem .25rem}
   }
   @media (prefers-reduced-motion:reduce){ #toast{transition:none} }
 </style>
@@ -120,14 +122,17 @@
 <header class="band">
   <img src="mark-white.png" alt="Collegio Bellarmino">
   <div class="txt">
-    <small data-t="brand"></small>
-    <button class="datepick" id="datePick">
-      <span class="day" id="dayLabel">…</span><span class="caret">▾</span>
-      <input type="date" id="date" tabindex="-1" aria-hidden="true">
-    </button>
+    <small>Collegio Bellarmino</small>
+    <div class="site" data-t="siteTitle"></div>
   </div>
   <button class="gear" id="gear">🌐 IT</button>
 </header>
+<div class="dateRow">
+  <button class="datepick" id="datePick">
+    <span class="day" id="dayLabel">…</span><span class="caret">▾</span>
+    <input type="date" id="date" tabindex="-1" aria-hidden="true">
+  </button>
+</div>
 <nav class="bar">
   <button class="sq" id="prev">‹</button>
   <button class="sq" id="next">›</button>
@@ -203,7 +208,7 @@ const API = 'https://script.google.com/macros/s/AKfycbxUZXH2XNpQies6jE_vw9wRjz1P
 /* ---------- Traduzioni ---------- */
 const I18N = {
   it: {
-    brand:'Collegio Bellarmino · Prenotazione cappelle', today:'Oggi', wed:'Mercoledì',
+    siteTitle:'Prenotazione cappelle', today:'Oggi', wed:'Mercoledì',
     prev:'Giorno precedente', next:'Giorno successivo', all:'Tutte',
     smaller:'Testo più piccolo', larger:'Testo più grande',
     loading:'Caricamento…', updated:'Aggiornato alle {t}', adminBadge:'· Amministratore',
@@ -230,7 +235,7 @@ const I18N = {
     E_NET:'Connessione non riuscita. Controlla la rete e riprova.', E_GENERIC:'Operazione non riuscita. Riprova.'
   },
   en: {
-    brand:'Collegio Bellarmino · Chapel booking', today:'Today', wed:'Wednesday',
+    siteTitle:'Chapel booking', today:'Today', wed:'Wednesday',
     prev:'Previous day', next:'Next day', all:'All',
     smaller:'Smaller text', larger:'Larger text',
     loading:'Loading…', updated:'Updated at {t}', adminBadge:'· Admin',
@@ -257,7 +262,7 @@ const I18N = {
     E_NET:'Connection failed. Check your network and try again.', E_GENERIC:'Something went wrong. Try again.'
   },
   fr: {
-    brand:'Collegio Bellarmino · Réservation des chapelles', today:'Aujourd’hui', wed:'Mercredi',
+    siteTitle:'Réservation des chapelles', today:'Aujourd’hui', wed:'Mercredi',
     prev:'Jour précédent', next:'Jour suivant', all:'Toutes',
     smaller:'Texte plus petit', larger:'Texte plus grand',
     loading:'Chargement…', updated:'Mis à jour à {t}', adminBadge:'· Administrateur',
@@ -284,7 +289,7 @@ const I18N = {
     E_NET:'Connexion impossible. Vérifiez le réseau et réessayez.', E_GENERIC:'L’opération a échoué. Réessayez.'
   },
   es: {
-    brand:'Collegio Bellarmino · Reserva de capillas', today:'Hoy', wed:'Miércoles',
+    siteTitle:'Reserva de capillas', today:'Hoy', wed:'Miércoles',
     prev:'Día anterior', next:'Día siguiente', all:'Todas',
     smaller:'Texto más pequeño', larger:'Texto más grande',
     loading:'Cargando…', updated:'Actualizado a las {t}', adminBadge:'· Administrador',
@@ -404,7 +409,7 @@ function changeScale(d){
 
 /* ---------- Stato ---------- */
 let CFG = null, START = 0, END = 0, STEP = 15, N = 0;
-let current = todayISO();
+let current = nextWed(todayISO());
 let bookings = [];
 let scrollToFocus = true;
 let loadSeq = 0;
@@ -690,7 +695,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && !d
     return;
   }
   try { const c = JSON.parse(store.get('cfg') || 'null'); if (c && c.chapels) setCfg(c); } catch(e){}
-  setDate(todayISO());
+  setDate(nextWed(todayISO()));      // all'apertura: il mercoledì più vicino (oggi, se è mercoledì)
 })();
 </script>
 </body>
