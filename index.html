@@ -42,7 +42,8 @@
   .gear{flex:none;align-self:flex-start;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;border-radius:.5rem;padding:.3rem .55rem;min-height:2.3rem;cursor:pointer;font-size:.9rem}
   .band img{height:3.4rem;width:auto;flex:none}
   .band small{display:block;font-size:.85rem;opacity:.85;letter-spacing:.02em}
-  .day{display:block;font:700 clamp(1.6rem,6.5vw,2.4rem)/1.1 "Cormorant Garamond",Georgia,serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .day{display:block;font:400 clamp(1.4rem,6vw,2.3rem)/1.15 "Alegreya Sans","Segoe UI",system-ui,sans-serif;color:#4A4142}
+  .day b{font-weight:700;color:var(--ink)}
   .langs{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem}
   .langs button{border:1px solid var(--rule-strong);background:#fff;border-radius:.5rem;min-height:2.6rem;cursor:pointer}
 
@@ -58,11 +59,23 @@
   .size{display:flex;gap:.3rem;flex:none}
   .size button{border:1px solid var(--rule-strong);background:var(--paper);border-radius:.5rem;min-width:2.5rem;min-height:2.2rem;cursor:pointer;font-size:1rem;color:var(--ink);font-weight:700}
   .size button:disabled{opacity:.4;cursor:default}
+  .openNote{margin:0 1rem .45rem;padding:.5rem .7rem;border-radius:.5rem;background:var(--red-tint);color:var(--red-deep);font-size:.95rem;line-height:1.3}
+  .openNote[hidden]{display:none}
   .admin-badge{display:none;margin-left:.4rem;color:var(--red);font-weight:700}
   .admin-on .admin-badge{display:inline}
 
   /* Tabellone */
-  .scroller{flex:1;overflow:auto;margin:0 .5rem .5rem;background:var(--paper);border:1px solid var(--rule-strong);border-radius:.6rem;-webkit-overflow-scrolling:touch}
+  .gridWrap{position:relative;flex:1;min-height:0;display:flex;margin:0 .5rem .5rem}
+  .scroller{flex:1;overflow:auto;background:var(--paper);border:1px solid var(--rule-strong);border-radius:.6rem;-webkit-overflow-scrolling:touch}
+  .fade{position:absolute;top:1px;bottom:1px;width:1.8rem;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5}
+  .fade.r{right:1px;border-radius:0 .6rem .6rem 0;background:linear-gradient(to right,rgba(35,28,29,0),rgba(35,28,29,.16))}
+  .fade.l{left:calc(var(--timew) + 1px);background:linear-gradient(to left,rgba(35,28,29,0),rgba(35,28,29,.12))}
+  .fade.show{opacity:1}
+  .dots{display:flex;justify-content:center;gap:0;padding:0 0 .25rem}
+  .dots[hidden]{display:none}
+  .dots button{width:1.3rem;height:1.3rem;border:0;background:none;padding:0;cursor:pointer;display:grid;place-items:center}
+  .dots button::before{content:"";width:.6rem;height:.6rem;border-radius:50%;background:#CDC3C4}
+  .dots button.on::before{background:var(--red)}
   .grid{display:grid;position:relative;
     grid-template-columns:var(--timew) repeat(var(--cols),minmax(var(--colw),1fr));
     grid-template-rows:3.4rem repeat(var(--n),var(--row))}
@@ -113,9 +126,9 @@
     :root{--colw:6.8rem;--timew:2.9rem}
     .band{padding-left:.7rem;padding-right:.7rem;gap:.6rem} .band img{height:2.6rem}
     .band small{font-size:.75rem} .gear .code{display:none}
-    .dateRow,.bar,.floors,.sync{padding-left:.6rem;padding-right:.6rem} .scroller{margin:0 .25rem .25rem}
+    .dateRow,.bar,.floors,.sync{padding-left:.6rem;padding-right:.6rem} .openNote{margin-left:.6rem;margin-right:.6rem} .gridWrap{margin:0 .25rem .25rem}
   }
-  @media (prefers-reduced-motion:reduce){ #toast{transition:none} }
+  @media (prefers-reduced-motion:reduce){ #toast,.fade{transition:none} }
 </style>
 </head>
 <body>
@@ -145,7 +158,12 @@
   <span class="size"><button id="smaller">A−</button><button id="larger">A+</button></span>
 </div>
 
-<div class="scroller" id="scroller"><div class="grid" id="grid"></div></div>
+<div class="openNote" id="openNote" role="status" hidden></div>
+<div class="dots" id="dots" hidden></div>
+<div class="gridWrap">
+  <div class="scroller" id="scroller"><div class="grid" id="grid"></div></div>
+  <div class="fade l" id="fadeL"></div><div class="fade r" id="fadeR"></div>
+</div>
 
 <dialog id="bookDlg">
   <form class="dlg" method="dialog">
@@ -224,7 +242,7 @@ const I18N = {
     admin:'Accesso amministratore', adminExit:'Esci da amministratore', adminPrompt:'Password amministratore',
     adminOn:'Modalità amministratore attiva.', adminOff:'Modalità amministratore disattivata.',
     taken:'Occupata da {0} ({1}–{2}).', tooLate:'Termina dopo le {t}: scegli una durata più breve.',
-    past:'Questo orario è già passato.', needGroup:'Scegli il gruppo.', needName:'Scrivi il tuo nome.',
+    past:'Questo orario è già passato.', notYet:'Le prenotazioni per questo giorno si aprono {d} alle {t}.', needGroup:'Scegli il gruppo.', needName:'Scrivi il tuo nome.',
     f0:'Pianterreno', f2:'2° piano', f2i:'Secondo intermedio', f3:'3° piano',
     E_DATE:'Data non valida.', E_PAST:'Non si può prenotare nel passato.', E_CHAPEL:'Cappella non valida.',
     E_START:'Orario di inizio non valido.', E_DUR:'Durata non valida.', E_RANGE:'Orario fuori dalla fascia consentita.',
@@ -251,7 +269,7 @@ const I18N = {
     admin:'Admin sign-in', adminExit:'Sign out of admin', adminPrompt:'Admin password',
     adminOn:'Admin mode on.', adminOff:'Admin mode off.',
     taken:'Taken by {0} ({1}–{2}).', tooLate:'Ends after {t}: choose a shorter duration.',
-    past:'This time has already passed.', needGroup:'Choose a group.', needName:'Enter your name.',
+    past:'This time has already passed.', notYet:'Bookings for this day open on {d} at {t}.', needGroup:'Choose a group.', needName:'Enter your name.',
     f0:'Ground floor', f2:'2nd floor', f2i:'2nd floor, intermediate level', f3:'3rd floor',
     E_DATE:'Invalid date.', E_PAST:'Bookings in the past are not allowed.', E_CHAPEL:'Invalid chapel.',
     E_START:'Invalid start time.', E_DUR:'Invalid duration.', E_RANGE:'Time outside the allowed hours.',
@@ -278,7 +296,7 @@ const I18N = {
     admin:'Accès administrateur', adminExit:'Quitter le mode administrateur', adminPrompt:'Mot de passe administrateur',
     adminOn:'Mode administrateur activé.', adminOff:'Mode administrateur désactivé.',
     taken:'Occupée par {0} ({1}–{2}).', tooLate:'Se termine après {t} : choisissez une durée plus courte.',
-    past:'Cet horaire est déjà passé.', needGroup:'Choisissez un groupe.', needName:'Indiquez votre nom.',
+    past:'Cet horaire est déjà passé.', notYet:'Les réservations pour ce jour ouvrent le {d} à {t}.', needGroup:'Choisissez un groupe.', needName:'Indiquez votre nom.',
     f0:'Rez-de-chaussée', f2:'2e étage', f2i:'2e étage, niveau intermédiaire', f3:'3e étage',
     E_DATE:'Date non valide.', E_PAST:'Impossible de réserver dans le passé.', E_CHAPEL:'Chapelle non valide.',
     E_START:'Heure de début non valide.', E_DUR:'Durée non valide.', E_RANGE:'Horaire en dehors de la plage autorisée.',
@@ -305,7 +323,7 @@ const I18N = {
     admin:'Acceso de administrador', adminExit:'Salir del modo administrador', adminPrompt:'Contraseña de administrador',
     adminOn:'Modo administrador activado.', adminOff:'Modo administrador desactivado.',
     taken:'Ocupada por {0} ({1}–{2}).', tooLate:'Termina después de las {t}: elige una duración más corta.',
-    past:'Esta hora ya ha pasado.', needGroup:'Elige un grupo.', needName:'Escribe tu nombre.',
+    past:'Esta hora ya ha pasado.', notYet:'Las reservas para este día se abren el {d} a las {t}.', needGroup:'Elige un grupo.', needName:'Escribe tu nombre.',
     f0:'Planta baja', f2:'2.ª planta', f2i:'2.ª planta, nivel intermedio', f3:'3.ª planta',
     E_DATE:'Fecha no válida.', E_PAST:'No se puede reservar en el pasado.', E_CHAPEL:'Capilla no válida.',
     E_START:'Hora de inicio no válida.', E_DUR:'Duración no válida.', E_RANGE:'Horario fuera de la franja permitida.',
@@ -328,6 +346,7 @@ function errText(err){
   if (!m) return T('E_GENERIC');
   const parts = m[0].split('|');
   if (parts[0] === 'E_TAKEN') return T('taken', { 0: parts[1], 1: parts[2], 2: parts[3] });
+  if (parts[0] === 'E_NOTYET') return T('notYet', { d: plainDate(parts[1]), t: parts[2] });
   return T(parts[0]);
 }
 
@@ -367,6 +386,19 @@ function longDate(s){
   const txt = new Intl.DateTimeFormat(LOCALE[lang], { weekday:'long', day:'numeric', month:'long', timeZone:'UTC' })
     .format(new Date(Date.UTC(p[0], p[1]-1, p[2])));
   return txt.charAt(0).toUpperCase() + txt.slice(1);
+}
+function plainDate(s){      // data dentro una frase: "mercoledì 7 ottobre"
+  const p = s.split('-').map(Number);
+  return new Intl.DateTimeFormat(LOCALE[lang], { weekday:'long', day:'numeric', month:'long', timeZone:'UTC' })
+    .format(new Date(Date.UTC(p[0], p[1]-1, p[2])));
+}
+function openDateFor(d){ return addDays(d, -((CFG && CFG.openDaysBefore) || 7)); }
+function openTime(){ return (CFG && CFG.openTime) || '07:00'; }
+function isOpen(d){
+  if (adminPw) return true;
+  const n = new Date();
+  const now = todayISO() + ' ' + toHM(n.getHours()*60 + n.getMinutes());
+  return now >= openDateFor(d) + ' ' + openTime();
 }
 function nowMinFor(d){
   const t = todayISO();
@@ -478,6 +510,10 @@ function render(){
   grid.style.setProperty('--cols', vis.length);
   grid.style.setProperty('--n', N);
   const now = nowMinFor(current);
+  const open = isOpen(current);
+  const note = $('#openNote');
+  note.hidden = open || current < todayISO();
+  if (!note.hidden) note.textContent = T('notYet', { d: plainDate(openDateFor(current)), t: openTime() });
   let h = '<div class="corner"></div>';
   vis.forEach(({ c }, k) => {
     h += `<div class="ch" style="grid-column:${k+2}"><b>${esc(c.short)}</b><small>${esc(floorText(c))}</small></div>`;
@@ -486,7 +522,7 @@ function render(){
     const t = START + s*STEP, row = s + 2;
     const cls = t % 60 === 0 ? 'hr' : (t % 30 === 0 ? 'half' : 'q');
     h += `<div class="tm ${cls}" style="grid-row:${row}">${t % 30 === 0 ? toHM(t) : ''}</div>`;
-    const past = t + STEP <= now;
+    const past = t + STEP <= now || !open;
     vis.forEach(({ c, i }, k) => {
       h += `<button class="cell ${cls}${past ? ' past' : ''}" style="grid-row:${row};grid-column:${k+2}" data-c="${i}" data-t="${t}"${past ? ' disabled' : ''} aria-label="${esc(c.short)} ${toHM(t)}"></button>`;
     });
@@ -505,6 +541,7 @@ function render(){
     h += `<div class="now" style="grid-row:${Math.floor(pos) + 2};margin-top:${(pos % 1) * rowPx()}px"></div>`;
   }
   grid.innerHTML = h;
+  requestAnimationFrame(updateDots);
   if (scrollToFocus){ sc.scrollTop = Math.max(0, ((toMin(CFG.focus) - START) / STEP - 1) * rowPx()); scrollToFocus = false; }
   else { sc.scrollTop = keepTop; sc.scrollLeft = keepLeft; }
 }
@@ -515,8 +552,18 @@ function setDate(d){
   updateHeader();
   render(); load();
 }
+function dayHTML(s){
+  const p = s.split('-').map(Number);
+  const parts = new Intl.DateTimeFormat(LOCALE[lang], { weekday:'long', day:'numeric', month:'long', timeZone:'UTC' })
+    .formatToParts(new Date(Date.UTC(p[0], p[1]-1, p[2])));
+  let wd = '', rest = '';
+  parts.forEach(x => { if (x.type === 'weekday') wd += x.value; else rest += x.value; });
+  wd = wd.charAt(0).toUpperCase() + wd.slice(1);
+  rest = rest.replace(/^[\s,]+/, '');
+  return `<b>${esc(wd)}</b> ${esc(rest)}`;
+}
 function updateHeader(){
-  $('#dayLabel').textContent = longDate(current);
+  $('#dayLabel').innerHTML = dayHTML(current);
   $('#today').classList.toggle('is-on', current === todayISO());
   $('#wed').classList.toggle('is-on', current === nextWed(todayISO()));
 }
@@ -582,6 +629,7 @@ function check(){
   let msg = '';
   if (e > END) msg = T('tooLate', { t: CFG.dayEnd });
   else if (s + STEP <= nowMinFor(current)) msg = T('past');
+  else if (!isOpen(current)) msg = T('notYet', { d: plainDate(openDateFor(current)), t: openTime() });
   else {
     const c = bookings.find(b => b.chapel === f.chapel && toMin(b.start) < e && s < toMin(b.end));
     if (c) msg = T('taken', { 0: c.group, 1: c.start, 2: c.end });
@@ -601,7 +649,7 @@ $('#bookOk').addEventListener('click', async () => {
   store.set('group', f.group); store.set('name', f.name);
   const btn = $('#bookOk'); btn.disabled = true; btn.textContent = T('booking');
   try {
-    const res = await apiPost(f);
+    const res = await apiPost(Object.assign({ admin: adminPw || '' }, f));
     if (res && res.id && res.key) saveKey(res.id, res.key, f.date);
     $('#bookDlg').close(); toast(T('booked'));
   } catch(err){
@@ -654,6 +702,39 @@ $('#adminBtn').addEventListener('click', async () => {
     await apiPost({ action: 'admin', admin: pw });
     adminPw = pw; store.set('admin', pw); showSync(); render(); toast(T('adminOn'));
   } catch(err){ toast(errText(err)); }
+});
+
+/* ---------- Indicatore delle cappelle visibili (puntini) ---------- */
+function updateDots(){
+  const sc = $('#scroller'), dots = $('#dots');
+  const chs = Array.from(document.querySelectorAll('#grid .ch'));
+  const corner = document.querySelector('#grid .corner');
+  if (!chs.length || !corner){ dots.hidden = true; return; }
+  const sr = sc.getBoundingClientRect();
+  const left = sr.left + corner.getBoundingClientRect().width, right = sr.right;
+  const on = chs.map(el => {
+    const r = el.getBoundingClientRect();
+    const seen = Math.min(r.right, right) - Math.max(r.left, left);
+    return seen > r.width * 0.5;
+  });
+  const all = on.every(Boolean);
+  dots.hidden = all;
+  $('#fadeL').classList.toggle('show', !all && sc.scrollLeft > 2);
+  $('#fadeR').classList.toggle('show', !all && sc.scrollLeft + sc.clientWidth < sc.scrollWidth - 2);
+  if (all) return;
+  if (dots.children.length !== chs.length){
+    dots.innerHTML = chs.map((el, i) => `<button data-i="${i}" aria-label="${esc(el.querySelector('b').textContent)}"></button>`).join('');
+  }
+  Array.from(dots.children).forEach((b, i) => b.classList.toggle('on', on[i]));
+}
+let dotsRaf = 0;
+$('#scroller').addEventListener('scroll', () => { cancelAnimationFrame(dotsRaf); dotsRaf = requestAnimationFrame(updateDots); }, { passive: true });
+window.addEventListener('resize', () => requestAnimationFrame(updateDots));
+$('#dots').addEventListener('click', e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  const el = document.querySelectorAll('#grid .ch')[Number(b.dataset.i)];
+  const corner = document.querySelector('#grid .corner');
+  if (el && corner) $('#scroller').scrollTo({ left: el.offsetLeft - corner.offsetWidth, behavior: 'smooth' });
 });
 
 /* ---------- Eventi ---------- */
