@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cappelle per i gruppi di condivisione · Collegio Bellarmino</title>
+<meta name="theme-color" content="#9B1E28">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cappelle">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#9B1E28; --red-deep:#7C1720; --red-tint:#F6E8E9;
+    --bg:#F2F0EF; --paper:#FFFFFF; --ink:#231C1D; --muted:#655B5C;
+    --rule:#DDD6D6; --rule-strong:#B9AEAF; --past:#F3F1F1;
+    --scale:1;
+    --row:1.25rem; --colw:7.6rem; --timew:3.3rem;
+  }
+  html{font-size:calc(16px * var(--scale));-webkit-text-size-adjust:100%}
+  body{font-family:"Alegreya Sans","Segoe UI",system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{display:flex;flex-direction:column;padding:0 env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+  button,input,select{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+  /* Intestazione rossa con lo stemma */
+  .band{background:var(--red);color:#fff;padding:calc(env(safe-area-inset-top,0px) + .8rem) 1rem .8rem;display:flex;align-items:center;gap:.9rem}
+  .band .txt{flex:1;min-width:0}
+  .band .site{font:700 clamp(1.5rem,5.5vw,2.2rem)/1.05 "Cormorant Garamond",Georgia,serif;margin-top:.05rem}
+  .dateRow{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem 1rem .1rem}
+  .datepick{position:relative;display:inline-flex;align-items:baseline;gap:.4rem;border:0;background:none;color:var(--ink);padding:0;cursor:pointer;text-align:left;min-width:0}
+  .datepick .caret{font-size:1rem;color:var(--red)}
+
+  #date{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+  .gear{flex:none;align-self:flex-start;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;border-radius:.5rem;padding:.3rem .55rem;min-height:2.3rem;cursor:pointer;font-size:.9rem}
+  .band img{height:3.4rem;width:auto;flex:none}
+  .band small{display:block;font-size:.85rem;opacity:.85;letter-spacing:.02em}
+  .day{display:block;font:400 clamp(1.4rem,6vw,2.3rem)/1.15 "Alegreya Sans","Segoe UI",system-ui,sans-serif;color:#4A4142}
+  .day b{font-weight:700;color:var(--ink)}
+  .langs{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem}
+  .langs button{border:1px solid var(--rule-strong);background:#fff;border-radius:.5rem;min-height:2.6rem;cursor:pointer}
+
+  .bar{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;padding:.4rem 1rem .4rem}
+  .bar button{border:1px solid var(--rule-strong);background:var(--paper);border-radius:.5rem;padding:.3rem .55rem;min-height:2.3rem;cursor:pointer;font-size:1rem}
+  .bar .sq{min-width:2.3rem;padding:0 .35rem;line-height:1}
+  .bar .spacer{flex:1}
+  .is-on{background:var(--red)!important;color:#fff!important;border-color:var(--red)!important}
+  .floors{display:flex;gap:.4rem;overflow-x:auto;padding:0 1rem .5rem;scrollbar-width:none}
+  .floors button{flex:none;border:1px solid var(--rule-strong);background:transparent;border-radius:999px;padding:.25rem .8rem;min-height:2.1rem;cursor:pointer;font-size:.95rem}
+  .sync{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:0 1rem .4rem;font-size:.85rem;color:var(--muted)}
+  .sync .msg{min-width:0}
+  .size{display:flex;gap:.3rem;flex:none}
+  .size button{border:1px solid var(--rule-strong);background:var(--paper);border-radius:.5rem;min-width:2.5rem;min-height:2.2rem;cursor:pointer;font-size:1rem;color:var(--ink);font-weight:700}
+  .size button:disabled{opacity:.4;cursor:default}
+  .openNote{margin:0 1rem .45rem;padding:.5rem .7rem;border-radius:.5rem;background:var(--red-tint);color:var(--red-deep);font-size:.95rem;line-height:1.3}
+  .openNote[hidden]{display:none}
+  .admin-badge{display:none;margin-left:.4rem;color:var(--red);font-weight:700}
+  .admin-on .admin-badge{display:inline}
+
+  /* Tabellone */
+  .gridWrap{position:relative;flex:1;min-height:0;display:flex;margin:0 .5rem .5rem}
+  .scroller{flex:1;overflow:auto;background:var(--paper);border:1px solid var(--rule-strong);border-radius:.6rem;-webkit-overflow-scrolling:touch}
+  .fade{position:absolute;top:1px;bottom:1px;width:1.8rem;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5}
+  .fade.r{right:1px;border-radius:0 .6rem .6rem 0;background:linear-gradient(to right,rgba(35,28,29,0),rgba(35,28,29,.16))}
+  .fade.l{left:calc(var(--timew) + 1px);background:linear-gradient(to left,rgba(35,28,29,0),rgba(35,28,29,.12))}
+  .fade.show{opacity:1}
+  .dots{display:flex;justify-content:center;gap:0;padding:0 0 .25rem}
+  .dots[hidden]{display:none}
+  .dots button{width:1.3rem;height:1.3rem;border:0;background:none;padding:0;cursor:pointer;display:grid;place-items:center}
+  .dots button::before{content:"";width:.6rem;height:.6rem;border-radius:50%;background:#CDC3C4}
+  .dots button.on::before{background:var(--red)}
+  .grid{display:grid;position:relative;
+    grid-template-columns:var(--timew) repeat(var(--cols),minmax(var(--colw),1fr));
+    grid-template-rows:auto repeat(var(--n),var(--row))}
+  .corner,.ch{position:sticky;top:0;z-index:4;background:var(--paper);border-bottom:2px solid var(--red)}
+  .corner{left:0;z-index:5}
+  .ch{grid-row:1;padding:.4rem .5rem .45rem;border-left:1px solid var(--rule);line-height:1.15;overflow-wrap:break-word;hyphens:auto}
+  .ch b{display:block;font-weight:700;font-size:.92rem}
+  .ch small{display:block;color:var(--muted);font-size:.78rem;margin-top:.1rem}
+  .ch small.x{font-style:italic;color:#4A4142}
+  .tm{grid-column:1;position:sticky;left:0;z-index:2;background:var(--paper);font-size:.8rem;color:var(--muted);
+      padding-right:.35rem;text-align:right;transform:translateY(-.45rem)}
+  .tm.hr{color:var(--ink);font-weight:700}
+  .tm.first{transform:none;padding-top:.2rem;z-index:3}
+  .cell{border:0;border-left:1px solid var(--rule);border-top:1px solid transparent;background:transparent;padding:0;cursor:pointer;border-radius:0}
+  .cell.half{border-top-color:var(--rule)}
+  .cell.hr{border-top-color:var(--rule-strong)}
+  @media (hover:hover){ .cell:hover{background:var(--red-tint)} }
+  .cell.past{background:var(--past);cursor:default}
+  .bk{z-index:1;margin:1px 3px;border:0;border-left:4px solid hsl(var(--h) 40% 36%);border-radius:.4rem;
+      background:hsl(var(--h) 45% 90%);text-align:left;padding:.15rem .4rem;overflow:hidden;cursor:pointer;line-height:1.15}
+  .bk.mine{box-shadow:inset 0 0 0 2px hsl(var(--h) 40% 36%)}
+  .bk b{display:block;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bk span,.bk small{display:block;font-size:.78rem;color:#3a3132;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .now{grid-column:2 / -1;height:0;border-top:2px solid var(--red);z-index:2;pointer-events:none;align-self:start}
+  .notice{padding:1.5rem;max-width:60ch;line-height:1.5}
+
+  /* Finestre */
+  dialog{border:0;border-radius:.8rem;padding:0;width:min(30rem,94vw);max-height:90vh;color:var(--ink);box-shadow:0 18px 50px rgba(35,20,20,.35)}
+  dialog::backdrop{background:rgba(35,20,20,.45)}
+  .dlg{padding:1.1rem 1.1rem .9rem;border-top:5px solid var(--red)}
+  .dlg h2{margin:0 0 .1rem;font:700 1.5rem/1.15 "Cormorant Garamond",Georgia,serif}
+  .dlg .sub{margin:0 0 .9rem;color:var(--muted);font-size:.9rem}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+  label{display:block;font-size:.85rem;color:var(--muted);margin:0 0 .6rem}
+  label > input,label > select{display:block;width:100%;margin-top:.2rem;border:1px solid var(--rule-strong);border-radius:.5rem;padding:.45rem .5rem;background:#fff;min-height:2.5rem;font-size:max(1rem,16px)}
+  .warn{min-height:1.2rem;font-size:.9rem;color:var(--red);margin:.1rem 0 .5rem}
+  .hint{font-size:.85rem;color:var(--muted);margin:0 0 .6rem}
+  .actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.5rem;margin-top:.4rem}
+  .btn{border:1px solid var(--rule-strong);background:#fff;border-radius:.5rem;padding:.5rem .9rem;cursor:pointer;min-height:2.6rem}
+  .btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+  .btn.danger{color:var(--red);border-color:#E2B9BC}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  dl{margin:0 0 .8rem;display:grid;grid-template-columns:auto 1fr;gap:.25rem .8rem;font-size:1rem}
+  dt{color:var(--muted)}dd{margin:0}
+
+  #toast{position:fixed;left:50%;bottom:calc(1.1rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:.6rem .9rem;border-radius:.6rem;font-size:.9rem;max-width:92vw;opacity:0;pointer-events:none;transition:opacity .2s}
+  #toast.show{opacity:1}
+  @media (max-width:600px){
+    :root{--colw:7.3rem;--timew:2.9rem} .ch{padding-left:.4rem;padding-right:.35rem} .ch b{font-size:.86rem}
+    .band{padding-left:.7rem;padding-right:.7rem;gap:.6rem} .band img{height:2.6rem}
+    .band small{font-size:.75rem} .gear .code{display:none}
+    .dateRow,.bar,.floors,.sync{padding-left:.6rem;padding-right:.6rem} .openNote{margin-left:.6rem;margin-right:.6rem} .gridWrap{margin:0 .25rem .25rem}
+  }
+  @media (prefers-reduced-motion:reduce){ #toast,.fade{transition:none} }
+</style>
+</head>
+<body>
+<header class="band">
+  <img src="mark-white.png" alt="Collegio Bellarmino">
+  <div class="txt">
+    <small>Collegio Bellarmino</small>
+    <div class="site" data-t="siteTitle"></div>
+  </div>
+  <button class="gear" id="gear">🌐 IT</button>
+</header>
+<div class="dateRow">
+  <button class="datepick" id="datePick">
+    <span class="day" id="dayLabel">…</span><span class="caret">▾</span>
+    <input type="date" id="date" tabindex="-1" aria-hidden="true">
+  </button>
+</div>
+<nav class="bar">
+  <button class="sq" id="prev">‹</button>
+  <button class="sq" id="next">›</button>
+  <button id="today" data-t="today"></button>
+  <button id="wed" data-t="wed"></button>
+</nav>
+<div class="floors" id="floors"></div>
+<div class="sync">
+  <span class="msg"><span id="sync" aria-live="polite"></span><span class="admin-badge" data-t="adminBadge"></span></span>
+  <span class="size"><button id="smaller">A−</button><button id="larger">A+</button></span>
+</div>
+
+<div class="openNote" id="openNote" role="status" hidden></div>
+<div class="dots" id="dots" hidden></div>
+<div class="gridWrap">
+  <div class="scroller" id="scroller"><div class="grid" id="grid"></div></div>
+  <div class="fade l" id="fadeL"></div><div class="fade r" id="fadeR"></div>
+</div>
+
+<dialog id="bookDlg">
+  <form class="dlg" method="dialog">
+    <h2 data-t="bookTitle"></h2>
+    <p class="sub" id="bookSub"></p>
+    <label><span data-t="chapel"></span> <select id="fChapel"></select></label>
+    <div class="row">
+      <label><span data-t="start"></span> <select id="fStart"></select></label>
+      <label><span data-t="duration"></span> <select id="fDur"></select></label>
+    </div>
+    <label><span data-t="group"></span> <select id="fGroup"></select></label>
+    <label><span data-t="name"></span> <input id="fName" maxlength="60" autocomplete="name"></label>
+    <label><span data-t="note"></span> <input id="fNote" maxlength="200"></label>
+    <p class="hint" data-t="ownerHint"></p>
+    <div class="warn" id="warn"></div>
+    <div class="actions">
+      <button type="button" class="btn" id="bookCancel" data-t="cancel"></button>
+      <button type="button" class="btn primary" id="bookOk" data-t="bookBtn"></button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="infoDlg">
+  <div class="dlg">
+    <h2 id="iGroup"></h2>
+    <p class="sub" id="iWhen"></p>
+    <dl id="iList"></dl>
+    <p class="hint" id="iHint"></p>
+    <div class="actions">
+      <button type="button" class="btn danger" id="iDel" data-t="delete"></button>
+      <button type="button" class="btn primary" id="iClose" data-t="close"></button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="setDlg">
+  <div class="dlg">
+    <h2>Lingua · Language</h2>
+    <p class="sub">&nbsp;</p>
+    <div class="langs">
+      <button data-lang="it">Italiano</button>
+      <button data-lang="en">English</button>
+      <button data-lang="fr">Français</button>
+      <button data-lang="es">Español</button>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" id="adminBtn"></button>
+      <button type="button" class="btn primary" id="setClose" data-t="close"></button>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast" role="status"></div>
+
+<script>
+/* ▼▼▼ URL del deployment di Apps Script (finisce con /exec) ▼▼▼ */
+const API = 'https://script.google.com/macros/s/AKfycbxUZXH2XNpQies6jE_vw9wRjz1PKDo6QzZFH0t06Gz78uGsTBJ2ayI__QhuIx_4NYXzAQ/exec';
+/* ▲▲▲ ---------------------------------------------------- ▲▲▲ */
+
+/* ---------- Traduzioni ---------- */
+const I18N = {
+  it: {
+    siteTitle:'Cappelle per i gruppi di condivisione', today:'Oggi', wed:'Mercoledì',
+    prev:'Giorno precedente', next:'Giorno successivo', all:'Tutte',
+    smaller:'Testo più piccolo', larger:'Testo più grande',
+    loading:'Caricamento…', updated:'Aggiornato alle {t}', adminBadge:'· Amministratore',
+    offline:'Connessione non riuscita. Riprovo tra poco.',
+    bookTitle:'Prenota', chapel:'Cappella', start:'Inizio', duration:'Durata', group:'Gruppo', choose:'Scegli…',
+    name:'Il tuo nome', note:'Nota (facoltativa)', cancel:'Annulla', bookBtn:'Prenota', booking:'Prenotazione…',
+    ownerHint:'Potrai cancellare questa prenotazione solo da questo dispositivo.',
+    booked:'Prenotata.', delete:'Cancella prenotazione', deleted:'Cancellata.', confirmDel:'Cancellare questa prenotazione?',
+    close:'Chiudi', bookedBy:'Prenotata da', noteLbl:'Nota',
+    mineHint:'Hai fatto tu questa prenotazione da questo dispositivo.',
+    onlyOwner:'Solo chi ha prenotato può cancellarla, dal dispositivo usato per prenotare.',
+    adminHint:'Modalità amministratore: puoi cancellare qualsiasi prenotazione.',
+    admin:'Accesso amministratore', adminExit:'Esci da amministratore', adminPrompt:'Password amministratore',
+    adminOn:'Modalità amministratore attiva.', adminOff:'Modalità amministratore disattivata.',
+    taken:'Occupata da {0} ({1}–{2}).', tooLate:'Termina dopo le {t}: scegli una durata più breve.',
+    past:'Questo orario è già passato.', notYet:'Le prenotazioni per questo giorno si aprono {d} alle {t}.', needGroup:'Scegli il gruppo.', needName:'Scrivi il tuo nome.',
+    f0:'Pianterreno', f2:'2° piano', f2i:'Secondo intermedio', f3:'3° piano',
+    E_DATE:'Data non valida.', E_PAST:'Non si può prenotare nel passato.', E_CHAPEL:'Cappella non valida.',
+    E_START:'Orario di inizio non valido.', E_DUR:'Durata non valida.', E_RANGE:'Orario fuori dalla fascia consentita.',
+    E_GROUP:'Scegli il gruppo.', E_NAME:'Scrivi il tuo nome.',
+    E_NOTFOUND:'Prenotazione non trovata: forse è già stata cancellata.',
+    E_FORBIDDEN:'Solo chi ha prenotato può cancellare questa prenotazione.', E_ADMIN:'Password non corretta.',
+    E_BUSY:'Troppe richieste insieme. Riprova tra qualche secondo.',
+    E_NET:'Connessione non riuscita. Controlla la rete e riprova.', E_GENERIC:'Operazione non riuscita. Riprova.'
+  },
+  en: {
+    siteTitle:'Chapels for the sharing groups', today:'Today', wed:'Wednesday',
+    prev:'Previous day', next:'Next day', all:'All',
+    smaller:'Smaller text', larger:'Larger text',
+    loading:'Loading…', updated:'Updated at {t}', adminBadge:'· Admin',
+    offline:'Connection failed. Retrying shortly.',
+    bookTitle:'Book', chapel:'Chapel', start:'Start', duration:'Duration', group:'Group', choose:'Choose…',
+    name:'Your name', note:'Note (optional)', cancel:'Cancel', bookBtn:'Book', booking:'Booking…',
+    ownerHint:'You will be able to delete this booking only from this device.',
+    booked:'Booked.', delete:'Delete booking', deleted:'Deleted.', confirmDel:'Delete this booking?',
+    close:'Close', bookedBy:'Booked by', noteLbl:'Note',
+    mineHint:'You made this booking from this device.',
+    onlyOwner:'Only the person who booked can delete it, from the device used to book.',
+    adminHint:'Admin mode: you can delete any booking.',
+    admin:'Admin sign-in', adminExit:'Sign out of admin', adminPrompt:'Admin password',
+    adminOn:'Admin mode on.', adminOff:'Admin mode off.',
+    taken:'Taken by {0} ({1}–{2}).', tooLate:'Ends after {t}: choose a shorter duration.',
+    past:'This time has already passed.', notYet:'Bookings for this day open on {d} at {t}.', needGroup:'Choose a group.', needName:'Enter your name.',
+    f0:'Ground floor', f2:'2nd floor', f2i:'2nd floor, intermediate level', f3:'3rd floor',
+    E_DATE:'Invalid date.', E_PAST:'Bookings in the past are not allowed.', E_CHAPEL:'Invalid chapel.',
+    E_START:'Invalid start time.', E_DUR:'Invalid duration.', E_RANGE:'Time outside the allowed hours.',
+    E_GROUP:'Choose a group.', E_NAME:'Enter your name.',
+    E_NOTFOUND:'Booking not found: it may already have been deleted.',
+    E_FORBIDDEN:'Only the person who booked can delete this booking.', E_ADMIN:'Wrong password.',
+    E_BUSY:'Too many requests at once. Try again in a few seconds.',
+    E_NET:'Connection failed. Check your network and try again.', E_GENERIC:'Something went wrong. Try again.'
+  },
+  fr: {
+    siteTitle:'Chapelles pour les groupes de partage', today:'Aujourd’hui', wed:'Mercredi',
+    prev:'Jour précédent', next:'Jour suivant', all:'Toutes',
+    smaller:'Texte plus petit', larger:'Texte plus grand',
+    loading:'Chargement…', updated:'Mis à jour à {t}', adminBadge:'· Administrateur',
+    offline:'Connexion impossible. Nouvel essai dans un instant.',
+    bookTitle:'Réserver', chapel:'Chapelle', start:'Début', duration:'Durée', group:'Groupe', choose:'Choisir…',
+    name:'Votre nom', note:'Note (facultative)', cancel:'Annuler', bookBtn:'Réserver', booking:'Réservation…',
+    ownerHint:'Vous ne pourrez supprimer cette réservation que depuis cet appareil.',
+    booked:'Réservée.', delete:'Supprimer la réservation', deleted:'Supprimée.', confirmDel:'Supprimer cette réservation ?',
+    close:'Fermer', bookedBy:'Réservée par', noteLbl:'Note',
+    mineHint:'Vous avez fait cette réservation depuis cet appareil.',
+    onlyOwner:'Seule la personne qui a réservé peut la supprimer, depuis l’appareil utilisé.',
+    adminHint:'Mode administrateur : vous pouvez supprimer toute réservation.',
+    admin:'Accès administrateur', adminExit:'Quitter le mode administrateur', adminPrompt:'Mot de passe administrateur',
+    adminOn:'Mode administrateur activé.', adminOff:'Mode administrateur désactivé.',
+    taken:'Occupée par {0} ({1}–{2}).', tooLate:'Se termine après {t} : choisissez une durée plus courte.',
+    past:'Cet horaire est déjà passé.', notYet:'Les réservations pour ce jour ouvrent le {d} à {t}.', needGroup:'Choisissez un groupe.', needName:'Indiquez votre nom.',
+    f0:'Rez-de-chaussée', f2:'2e étage', f2i:'2e étage, niveau intermédiaire', f3:'3e étage',
+    E_DATE:'Date non valide.', E_PAST:'Impossible de réserver dans le passé.', E_CHAPEL:'Chapelle non valide.',
+    E_START:'Heure de début non valide.', E_DUR:'Durée non valide.', E_RANGE:'Horaire en dehors de la plage autorisée.',
+    E_GROUP:'Choisissez un groupe.', E_NAME:'Indiquez votre nom.',
+    E_NOTFOUND:'Réservation introuvable : elle a peut-être déjà été supprimée.',
+    E_FORBIDDEN:'Seule la personne qui a réservé peut supprimer cette réservation.', E_ADMIN:'Mot de passe incorrect.',
+    E_BUSY:'Trop de demandes simultanées. Réessayez dans quelques secondes.',
+    E_NET:'Connexion impossible. Vérifiez le réseau et réessayez.', E_GENERIC:'L’opération a échoué. Réessayez.'
+  },
+  es: {
+    siteTitle:'Capillas para los grupos de compartir', today:'Hoy', wed:'Miércoles',
+    prev:'Día anterior', next:'Día siguiente', all:'Todas',
+    smaller:'Texto más pequeño', larger:'Texto más grande',
+    loading:'Cargando…', updated:'Actualizado a las {t}', adminBadge:'· Administrador',
+    offline:'Error de conexión. Reintentando en breve.',
+    bookTitle:'Reservar', chapel:'Capilla', start:'Inicio', duration:'Duración', group:'Grupo', choose:'Elegir…',
+    name:'Tu nombre', note:'Nota (opcional)', cancel:'Cancelar', bookBtn:'Reservar', booking:'Reservando…',
+    ownerHint:'Solo podrás eliminar esta reserva desde este dispositivo.',
+    booked:'Reservada.', delete:'Eliminar reserva', deleted:'Eliminada.', confirmDel:'¿Eliminar esta reserva?',
+    close:'Cerrar', bookedBy:'Reservada por', noteLbl:'Nota',
+    mineHint:'Hiciste esta reserva desde este dispositivo.',
+    onlyOwner:'Solo quien reservó puede eliminarla, desde el dispositivo que usó.',
+    adminHint:'Modo administrador: puedes eliminar cualquier reserva.',
+    admin:'Acceso de administrador', adminExit:'Salir del modo administrador', adminPrompt:'Contraseña de administrador',
+    adminOn:'Modo administrador activado.', adminOff:'Modo administrador desactivado.',
+    taken:'Ocupada por {0} ({1}–{2}).', tooLate:'Termina después de las {t}: elige una duración más corta.',
+    past:'Esta hora ya ha pasado.', notYet:'Las reservas para este día se abren el {d} a las {t}.', needGroup:'Elige un grupo.', needName:'Escribe tu nombre.',
+    f0:'Planta baja', f2:'2.ª planta', f2i:'2.ª planta, nivel intermedio', f3:'3.ª planta',
+    E_DATE:'Fecha no válida.', E_PAST:'No se puede reservar en el pasado.', E_CHAPEL:'Capilla no válida.',
+    E_START:'Hora de inicio no válida.', E_DUR:'Duración no válida.', E_RANGE:'Horario fuera de la franja permitida.',
+    E_GROUP:'Elige un grupo.', E_NAME:'Escribe tu nombre.',
+    E_NOTFOUND:'Reserva no encontrada: quizá ya fue eliminada.',
+    E_FORBIDDEN:'Solo quien reservó puede eliminar esta reserva.', E_ADMIN:'Contraseña incorrecta.',
+    E_BUSY:'Demasiadas solicitudes a la vez. Inténtalo de nuevo en unos segundos.',
+    E_NET:'Error de conexión. Revisa la red e inténtalo de nuevo.', E_GENERIC:'La operación no se pudo completar. Inténtalo de nuevo.'
+  }
+};
+const LOCALE = { it:'it-IT', en:'en-GB', fr:'fr-FR', es:'es-ES' };
+let lang = 'it';
+function T(key, vars){
+  let s = (I18N[lang] && I18N[lang][key]) || I18N.it[key] || key;
+  if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+  return s;
+}
+function errText(err){
+  const m = /E_[A-Z]+(\|[^\n]*)?/.exec(String(err && err.message || ''));
+  if (!m) return T('E_GENERIC');
+  const parts = m[0].split('|');
+  if (parts[0] === 'E_TAKEN') return T('taken', { 0: parts[1], 1: parts[2], 2: parts[3] });
+  if (parts[0] === 'E_NOTYET') return T('notYet', { d: plainDate(parts[1]), t: parts[2] });
+  return T(parts[0]);
+}
+
+/* ---------- Collegamento con Apps Script ---------- */
+async function apiGet(params){
+  const url = API + '?' + new URLSearchParams(Object.assign({}, params, { _: Date.now() }));
+  let r; try { r = await fetch(url, { cache: 'no-store' }); } catch(e){ throw new Error('E_NET'); }
+  let j; try { j = await r.json(); } catch(e){ throw new Error('E_NET'); }
+  if (!j.ok) throw new Error(j.error || 'E_GENERIC');
+  return j.data;
+}
+async function apiPost(body){
+  // senza Content-Type esplicito il browser usa text/plain: nessuna richiesta preliminare CORS
+  let r; try { r = await fetch(API, { method: 'POST', body: JSON.stringify(body) }); } catch(e){ throw new Error('E_NET'); }
+  let j; try { j = await r.json(); } catch(e){ throw new Error('E_NET'); }
+  if (!j.ok) throw new Error(j.error || 'E_GENERIC');
+  return j.data;
+}
+
+/* ---------- Utilità ---------- */
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, '0');
+const toMin = t => { const p = String(t).split(':').map(Number); return p[0] * 60 + p[1]; };
+const toHM = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {
+  get(k){ try { return localStorage.getItem('cap.' + k) || ''; } catch(e){ return ''; } },
+  set(k,v){ try { localStorage.setItem('cap.' + k, v); } catch(e){} },
+  del(k){ try { localStorage.removeItem('cap.' + k); } catch(e){} }
+};
+function todayISO(){ const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function addDays(s, n){ const p = s.split('-').map(Number); return new Date(Date.UTC(p[0], p[1]-1, p[2]+n)).toISOString().slice(0,10); }
+function dow(s){ const p = s.split('-').map(Number); return new Date(Date.UTC(p[0], p[1]-1, p[2])).getUTCDay(); }
+function nextWed(s){ return addDays(s, (3 - dow(s) + 7) % 7); }
+function longDate(s){
+  const p = s.split('-').map(Number);
+  const txt = new Intl.DateTimeFormat(LOCALE[lang], { weekday:'long', day:'numeric', month:'long', timeZone:'UTC' })
+    .format(new Date(Date.UTC(p[0], p[1]-1, p[2])));
+  return txt.charAt(0).toUpperCase() + txt.slice(1);
+}
+function plainDate(s){      // data dentro una frase: "mercoledì 7 ottobre"
+  const p = s.split('-').map(Number);
+  return new Intl.DateTimeFormat(LOCALE[lang], { weekday:'long', day:'numeric', month:'long', timeZone:'UTC' })
+    .format(new Date(Date.UTC(p[0], p[1]-1, p[2])));
+}
+function openDateFor(d){ return addDays(d, -((CFG && CFG.openDaysBefore) || 7)); }
+function openTime(){ return (CFG && CFG.openTime) || '07:00'; }
+function isOpen(d){
+  if (adminPw) return true;
+  const n = new Date();
+  const now = todayISO() + ' ' + toHM(n.getHours()*60 + n.getMinutes());
+  return now >= openDateFor(d) + ' ' + openTime();
+}
+function nowMinFor(d){
+  const t = todayISO();
+  if (d < t) return Infinity;
+  if (d > t) return -Infinity;
+  const n = new Date(); return n.getHours()*60 + n.getMinutes();
+}
+function rowPx(){ return 1.25 * parseFloat(getComputedStyle(document.documentElement).fontSize); }
+
+/* ---------- Prenotazioni mie (chiavi salvate su questo dispositivo) ---------- */
+function myKeys(){ try { return JSON.parse(store.get('mine') || '{}'); } catch(e){ return {}; } }
+function saveKey(id, key, date){ const m = myKeys(); m[id] = { k: key, d: date }; store.set('mine', JSON.stringify(m)); }
+function dropKey(id){ const m = myKeys(); delete m[id]; store.set('mine', JSON.stringify(m)); }
+function pruneKeys(){
+  const m = myKeys(), limit = addDays(todayISO(), -1);
+  Object.keys(m).forEach(id => { if (!m[id] || m[id].d < limit) delete m[id]; });
+  store.set('mine', JSON.stringify(m));
+}
+const isMine = id => !!myKeys()[id];
+let adminPw = store.get('admin');
+
+/* ---------- Dimensione del testo ---------- */
+const SCALES = [1, 1.15, 1.3, 1.5, 1.7];
+let scaleIdx = (() => {
+  const s = parseInt(store.get('scale'), 10);
+  if (s >= 0 && s < SCALES.length) return s;
+  return window.matchMedia('(max-width:600px)').matches ? 1 : 0;   // sul telefono un po' più grande
+})();
+function applyScale(){
+  document.documentElement.style.setProperty('--scale', SCALES[scaleIdx]);
+  $('#smaller').disabled = scaleIdx === 0;
+  $('#larger').disabled = scaleIdx === SCALES.length - 1;
+}
+function changeScale(d){
+  const sc = $('#scroller'), ratio = sc.scrollTop / Math.max(1, sc.scrollHeight);
+  scaleIdx = Math.min(SCALES.length - 1, Math.max(0, scaleIdx + d));
+  store.set('scale', scaleIdx); applyScale(); render();
+  sc.scrollTop = ratio * sc.scrollHeight;
+}
+
+/* ---------- Stato ---------- */
+let CFG = null, START = 0, END = 0, STEP = 15, N = 0;
+let current = nextWed(todayISO());
+let bookings = [];
+let scrollToFocus = true;
+let loadSeq = 0;
+let lastSync = null;          // null | 'loading' | 'offline' | minuti
+let floorFilter = store.get('floor') || 'all';
+let openId = null;
+let cfgFresh = false;         // la configurazione viene riletta dal server una volta per apertura
+
+function setCfg(cfg){
+  CFG = cfg;
+  START = toMin(CFG.dayStart); END = toMin(CFG.dayEnd); STEP = CFG.step; N = (END - START) / STEP;
+  store.set('cfg', JSON.stringify(cfg));
+  fillForm(); renderFloors(); render();
+}
+const floorKey = c => String(c.floor).replace('i', '');     // '2i' resta con il 2° piano nei filtri
+function floorText(c){ return T('f' + c.floor) + (c.extra ? ' · ' + c.extra : ''); }
+function chapelName(id){ const c = CFG.chapels.find(c => c.id === id); return c ? c.short : id; }
+function visibleChapels(){
+  return CFG.chapels.map((c, i) => ({ c, i })).filter(x => floorFilter === 'all' || floorKey(x.c) === floorFilter);
+}
+function hueFor(g){
+  const i = CFG.groups.indexOf(g);
+  if (i >= 0) return Math.round(i * 360 / CFG.groups.length);
+  let h = 0; for (const ch of g) h = (h * 31 + ch.charCodeAt(0)) % 360; return h;
+}
+
+/* ---------- Caricamento e disegno ---------- */
+async function load(silent){
+  const d = current, seq = ++loadSeq;
+  if (!silent){ lastSync = 'loading'; showSync(); }
+  try {
+    const res = await apiGet({ action: cfgFresh ? 'day' : 'init', date: d });
+    if (seq !== loadSeq) return;
+    if (res.cfg){ setCfg(res.cfg); cfgFresh = true; }
+    bookings = res.bookings || [];
+    render();
+    const n = new Date(); lastSync = n.getHours()*60 + n.getMinutes();
+  } catch(e){
+    if (seq !== loadSeq) return;
+    lastSync = 'offline';
+  }
+  showSync();
+}
+function showSync(){
+  $('#sync').textContent = lastSync === 'loading' ? T('loading')
+    : lastSync === 'offline' ? T('offline')
+    : lastSync == null ? '' : T('updated', { t: toHM(lastSync) });
+  $('#adminBtn').textContent = adminPw ? T('adminExit') : T('admin');
+  document.body.classList.toggle('admin-on', !!adminPw);
+}
+
+function renderFloors(){
+  if (!CFG) return;
+  const keys = [];
+  CFG.chapels.forEach(c => { const k = floorKey(c); if (!keys.includes(k)) keys.push(k); });
+  if (floorFilter !== 'all' && !keys.includes(floorFilter)) floorFilter = 'all';
+  $('#floors').innerHTML = [['all', T('all')]].concat(keys.map(k => [k, T('f' + k)]))
+    .map(([k, l]) => `<button data-floor="${esc(k)}" class="${k === floorFilter ? 'is-on' : ''}">${esc(l)}</button>`).join('');
+}
+
+function render(){
+  if (!CFG) return;
+  const sc = $('#scroller'), grid = $('#grid');
+  const keepTop = sc.scrollTop, keepLeft = sc.scrollLeft;
+  const vis = visibleChapels();
+  grid.style.setProperty('--cols', vis.length);
+  grid.style.setProperty('--n', N);
+  const now = nowMinFor(current);
+  const open = isOpen(current);
+  const note = $('#openNote');
+  note.hidden = open || current < todayISO();
+  if (!note.hidden) note.textContent = T('notYet', { d: plainDate(openDateFor(current)), t: openTime() });
+  let h = '<div class="corner"></div>';
+  vis.forEach(({ c }, k) => {
+    h += `<div class="ch" style="grid-column:${k+2}"><b>${esc(c.short)}</b><small>${esc(T('f' + c.floor))}</small>${c.extra ? `<small class="x">${esc(c.extra)}</small>` : ''}</div>`;
+  });
+  for (let s = 0; s < N; s++){
+    const t = START + s*STEP, row = s + 2;
+    const cls = t % 60 === 0 ? 'hr' : (t % 30 === 0 ? 'half' : 'q');
+    h += `<div class="tm ${cls}${s === 0 ? ' first' : ''}" style="grid-row:${row}">${t % 30 === 0 ? toHM(t) : ''}</div>`;
+    const past = t + STEP <= now || !open;
+    vis.forEach(({ c, i }, k) => {
+      h += `<button class="cell ${cls}${past ? ' past' : ''}" style="grid-row:${row};grid-column:${k+2}" data-c="${i}" data-t="${t}"${past ? ' disabled' : ''} aria-label="${esc(c.short)} ${toHM(t)}"></button>`;
+    });
+  }
+  bookings.forEach(b => {
+    const k = vis.findIndex(x => x.c.id === b.chapel);
+    if (k < 0) return;
+    const s = Math.max(0, (toMin(b.start) - START) / STEP);
+    const e = Math.min(N, (toMin(b.end) - START) / STEP);
+    if (e <= s) return;
+    h += `<button class="bk${isMine(b.id) ? ' mine' : ''}" data-id="${esc(b.id)}" style="grid-row:${s+2} / ${e+2};grid-column:${k+2};--h:${hueFor(b.group)}">`
+       + `<b>${esc(b.group)}</b><span>${esc(b.start)}–${esc(b.end)}</span>${e - s >= 3 ? `<small>${esc(b.name)}</small>` : ''}</button>`;
+  });
+  if (now > START && now < END){
+    const pos = (now - START) / STEP;
+    h += `<div class="now" style="grid-row:${Math.floor(pos) + 2};margin-top:${(pos % 1) * rowPx()}px"></div>`;
+  }
+  grid.innerHTML = h;
+  requestAnimationFrame(updateDots);
+  if (scrollToFocus){ sc.scrollTop = Math.max(0, ((toMin(CFG.focus) - START) / STEP - 1) * rowPx()); scrollToFocus = false; }
+  else { sc.scrollTop = keepTop; sc.scrollLeft = keepLeft; }
+}
+
+function setDate(d){
+  current = d; scrollToFocus = true; bookings = [];
+  $('#date').value = d;
+  updateHeader();
+  render(); load();
+}
+function dayHTML(s){
+  const p = s.split('-').map(Number);
+  const parts = new Intl.DateTimeFormat(LOCALE[lang], { weekday:'long', day:'numeric', month:'long', timeZone:'UTC' })
+    .formatToParts(new Date(Date.UTC(p[0], p[1]-1, p[2])));
+  let wd = '', rest = '';
+  parts.forEach(x => { if (x.type === 'weekday') wd += x.value; else rest += x.value; });
+  wd = wd.charAt(0).toUpperCase() + wd.slice(1);
+  rest = rest.replace(/^[\s,]+/, '');
+  return `<b>${esc(wd)}</b> ${esc(rest)}`;
+}
+function updateHeader(){
+  $('#dayLabel').innerHTML = dayHTML(current);
+  $('#today').classList.toggle('is-on', current === todayISO());
+  $('#wed').classList.toggle('is-on', current === nextWed(todayISO()));
+}
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 4500); }
+
+/* ---------- Lingua e modulo ---------- */
+function fillSelect(sel, items){
+  const keep = sel.value;
+  sel.innerHTML = items.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('');
+  if (keep && items.some(([v]) => String(v) === keep)) sel.value = keep;
+}
+function fillForm(){
+  if (!CFG) return;
+  fillSelect($('#fChapel'), CFG.chapels.map(c => [c.id, c.short + ' — ' + floorText(c)]));
+  const starts = []; for (let t = START; t < END; t += STEP) starts.push([toHM(t), toHM(t)]);
+  fillSelect($('#fStart'), starts);
+  const durs = []; for (let d = CFG.minDur; d <= CFG.maxDur; d += STEP)
+    durs.push([d, d < 60 ? d + ' min' : Math.floor(d/60) + ' h' + (d % 60 ? ' ' + d % 60 + ' min' : '')]);
+  fillSelect($('#fDur'), durs);
+  fillSelect($('#fGroup'), [['', T('choose')]].concat(CFG.groups.map(g => [g, g])));
+}
+function setLang(l){
+  lang = I18N[l] ? l : 'it';
+  store.set('lang', lang);
+  $('#gear').innerHTML = '🌐<span class="code"> ' + lang.toUpperCase() + '</span>';
+  document.querySelectorAll('[data-lang]').forEach(b => b.classList.toggle('is-on', b.dataset.lang === lang));
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = T(el.dataset.t); });
+  document.title = T('siteTitle') + ' · Collegio Bellarmino';
+  [['#prev','prev'],['#next','next'],['#smaller','smaller'],['#larger','larger']]
+    .forEach(([id, k]) => { $(id).setAttribute('aria-label', T(k)); $(id).title = T(k); });
+  fillForm(); renderFloors(); updateHeader(); showSync(); render();
+  if ($('#bookDlg').open){ $('#bookSub').textContent = longDate(current); check(); }
+  if ($('#infoDlg').open && openId) fillInfo(openId);
+}
+function initialLang(){
+  const saved = store.get('lang'); if (I18N[saved]) return saved;
+  const nav = (navigator.language || 'it').slice(0, 2).toLowerCase();
+  return I18N[nav] ? nav : 'it';
+}
+
+/* ---------- Prenotazione ---------- */
+function openBook(ci, t){
+  $('#fChapel').value = CFG.chapels[ci].id;
+  $('#fStart').value = toHM(t);
+  $('#fDur').value = 30;
+  const g = store.get('group');
+  $('#fGroup').value = CFG.groups.includes(g) ? g : '';
+  $('#fName').value = store.get('name');
+  $('#fNote').value = '';
+  $('#bookSub').textContent = longDate(current);
+  check();
+  $('#bookDlg').showModal();
+}
+function formData(){
+  return {
+    action: 'book', date: current,
+    chapel: $('#fChapel').value, start: $('#fStart').value, duration: Number($('#fDur').value),
+    group: $('#fGroup').value, name: $('#fName').value.trim(), note: $('#fNote').value.trim()
+  };
+}
+function check(){
+  const f = formData(), s = toMin(f.start), e = s + f.duration;
+  let msg = '';
+  if (e > END) msg = T('tooLate', { t: CFG.dayEnd });
+  else if (s + STEP <= nowMinFor(current)) msg = T('past');
+  else if (!isOpen(current)) msg = T('notYet', { d: plainDate(openDateFor(current)), t: openTime() });
+  else {
+    const c = bookings.find(b => b.chapel === f.chapel && toMin(b.start) < e && s < toMin(b.end));
+    if (c) msg = T('taken', { 0: c.group, 1: c.start, 2: c.end });
+  }
+  $('#warn').textContent = msg;
+  $('#bookOk').disabled = !!msg;
+  return !msg;
+}
+['#fChapel','#fStart','#fDur'].forEach(id => $(id).addEventListener('change', check));
+$('#bookCancel').addEventListener('click', () => $('#bookDlg').close());
+
+$('#bookOk').addEventListener('click', async () => {
+  if (!check()) return;
+  const f = formData();
+  if (!f.group){ $('#warn').textContent = T('needGroup'); return; }
+  if (!f.name){ $('#warn').textContent = T('needName'); return; }
+  store.set('group', f.group); store.set('name', f.name);
+  const btn = $('#bookOk'); btn.disabled = true; btn.textContent = T('booking');
+  try {
+    const res = await apiPost(Object.assign({ admin: adminPw || '' }, f));
+    if (res && res.id && res.key) saveKey(res.id, res.key, f.date);
+    $('#bookDlg').close(); toast(T('booked'));
+  } catch(err){
+    $('#warn').textContent = errText(err);
+  }
+  btn.textContent = T('bookBtn'); btn.disabled = false;
+  load(true);
+});
+
+/* ---------- Dettagli e cancellazione ---------- */
+function fillInfo(id){
+  const b = bookings.find(x => x.id === id); if (!b) return false;
+  $('#iGroup').textContent = b.group;
+  $('#iWhen').textContent = longDate(b.date) + ', ' + b.start + '–' + b.end;
+  $('#iList').innerHTML =
+    `<dt>${esc(T('chapel'))}</dt><dd>${esc(chapelName(b.chapel))}</dd>` +
+    `<dt>${esc(T('bookedBy'))}</dt><dd>${esc(b.name)}</dd>` +
+    (b.note ? `<dt>${esc(T('noteLbl'))}</dt><dd>${esc(b.note)}</dd>` : '');
+  const over = toMin(b.end) <= nowMinFor(b.date);
+  const mine = isMine(b.id);
+  $('#iDel').hidden = !(adminPw || (mine && !over));
+  $('#iHint').textContent = adminPw ? T('adminHint') : mine ? T('mineHint') : over ? '' : T('onlyOwner');
+  return true;
+}
+function openInfo(id){ openId = id; if (fillInfo(id)) $('#infoDlg').showModal(); }
+
+$('#iDel').addEventListener('click', async () => {
+  if (!confirm(T('confirmDel'))) return;
+  const btn = $('#iDel'); btn.disabled = true;
+  const own = myKeys()[openId];
+  try {
+    await apiPost({ action: 'cancel', id: openId, key: own ? own.k : '', admin: adminPw || '', by: store.get('name') });
+    dropKey(openId); toast(T('deleted'));
+  } catch(err){
+    if (/E_ADMIN|E_FORBIDDEN/.test(String(err.message)) && adminPw){ adminPw = ''; store.del('admin'); showSync(); }
+    if (/E_NOTFOUND/.test(String(err.message))) dropKey(openId);
+    toast(errText(err));
+  }
+  btn.disabled = false; $('#infoDlg').close(); load(true);
+});
+$('#iClose').addEventListener('click', () => $('#infoDlg').close());
+
+/* ---------- Amministratore ---------- */
+$('#adminBtn').addEventListener('click', async () => {
+  $('#setDlg').close();
+  if (adminPw){ adminPw = ''; store.del('admin'); showSync(); render(); toast(T('adminOff')); return; }
+  const pw = prompt(T('adminPrompt'));
+  if (!pw) return;
+  try {
+    await apiPost({ action: 'admin', admin: pw });
+    adminPw = pw; store.set('admin', pw); showSync(); render(); toast(T('adminOn'));
+  } catch(err){ toast(errText(err)); }
+});
+
+/* ---------- Indicatore delle cappelle visibili (puntini) ---------- */
+function updateDots(){
+  const sc = $('#scroller'), dots = $('#dots');
+  const chs = Array.from(document.querySelectorAll('#grid .ch'));
+  const corner = document.querySelector('#grid .corner');
+  if (!chs.length || !corner){ dots.hidden = true; return; }
+  const sr = sc.getBoundingClientRect();
+  const left = sr.left + corner.getBoundingClientRect().width, right = sr.right;
+  const on = chs.map(el => {
+    const r = el.getBoundingClientRect();
+    const seen = Math.min(r.right, right) - Math.max(r.left, left);
+    return seen > r.width * 0.5;
+  });
+  const all = on.every(Boolean);
+  dots.hidden = all;
+  $('#fadeL').classList.toggle('show', !all && sc.scrollLeft > 2);
+  $('#fadeR').classList.toggle('show', !all && sc.scrollLeft + sc.clientWidth < sc.scrollWidth - 2);
+  if (all) return;
+  if (dots.children.length !== chs.length){
+    dots.innerHTML = chs.map((el, i) => `<button data-i="${i}" aria-label="${esc(el.querySelector('b').textContent)}"></button>`).join('');
+  }
+  Array.from(dots.children).forEach((b, i) => b.classList.toggle('on', on[i]));
+}
+let dotsRaf = 0;
+$('#scroller').addEventListener('scroll', () => { cancelAnimationFrame(dotsRaf); dotsRaf = requestAnimationFrame(updateDots); }, { passive: true });
+window.addEventListener('resize', () => requestAnimationFrame(updateDots));
+$('#dots').addEventListener('click', e => {
+  const b = e.target.closest('button[data-i]'); if (!b) return;
+  const el = document.querySelectorAll('#grid .ch')[Number(b.dataset.i)];
+  const corner = document.querySelector('#grid .corner');
+  if (el && corner) $('#scroller').scrollTo({ left: el.offsetLeft - corner.offsetWidth, behavior: 'smooth' });
+});
+
+/* ---------- Eventi ---------- */
+$('#grid').addEventListener('click', e => {
+  const bk = e.target.closest('.bk'); if (bk){ openInfo(bk.dataset.id); return; }
+  const cell = e.target.closest('.cell'); if (cell && !cell.disabled) openBook(Number(cell.dataset.c), Number(cell.dataset.t));
+});
+$('#floors').addEventListener('click', e => {
+  const b = e.target.closest('[data-floor]'); if (!b) return;
+  floorFilter = b.dataset.floor; store.set('floor', floorFilter);
+  renderFloors(); render();
+});
+$('#prev').addEventListener('click', () => setDate(addDays(current, -1)));
+$('#next').addEventListener('click', () => setDate(addDays(current, 1)));
+$('#today').addEventListener('click', () => setDate(todayISO()));
+$('#wed').addEventListener('click', () => setDate(nextWed(todayISO())));
+$('#date').addEventListener('change', e => { if (e.target.value) setDate(e.target.value); });
+$('#datePick').addEventListener('click', () => {
+  const inp = $('#date');
+  try { inp.showPicker(); } catch(e){ inp.style.pointerEvents = 'auto'; inp.focus(); inp.click(); inp.style.pointerEvents = ''; }
+});
+$('#gear').addEventListener('click', () => { showSync(); $('#setDlg').showModal(); });
+$('#setClose').addEventListener('click', () => $('#setDlg').close());
+document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+$('#smaller').addEventListener('click', () => changeScale(-1));
+$('#larger').addEventListener('click', () => changeScale(1));
+
+const dialogOpen = () => $('#bookDlg').open || $('#infoDlg').open || $('#setDlg').open;
+setInterval(() => { if (!document.hidden && !dialogOpen()) load(true); }, 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !dialogOpen()) load(true); });
+
+/* ---------- Avvio ---------- */
+(function start(){
+  applyScale();
+  pruneKeys();
+  setLang(initialLang());
+  if (!/^https:\/\/script\.google\.com\//.test(API)){
+    $('#scroller').innerHTML = '<p class="notice">Manca l’indirizzo del servizio: incolla l’URL /exec di Apps Script nella costante API di index.html.</p>';
+    return;
+  }
+  try { const c = JSON.parse(store.get('cfg') || 'null'); if (c && c.chapels) setCfg(c); } catch(e){}
+  setDate(nextWed(todayISO()));      // all'apertura: il mercoledì più vicino (oggi, se è mercoledì)
+})();
+</script>
+</body>
+</html>
