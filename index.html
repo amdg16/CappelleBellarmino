@@ -83,7 +83,8 @@
   .dots button{width:1.3rem;height:1.3rem;border:0;background:none;padding:0;cursor:pointer;display:grid;place-items:center}
   .dots button::before{content:"";width:.6rem;height:.6rem;border-radius:50%;background:#CDC3C4}
   .dots button.on::before{background:var(--red)}
-  .grid{display:grid;position:relative;
+  /* la griglia deve essere larga quanto tutte le colonne: altrimenti la colonna delle ore (sticky) scivola via a destra */
+  .grid{display:grid;position:relative;min-width:calc(var(--timew) + var(--cols) * var(--colw));
     grid-template-columns:var(--timew) repeat(var(--cols),minmax(var(--colw),1fr));
     grid-template-rows:auto repeat(var(--n),var(--row))}
   .corner,.ch{position:sticky;top:0;z-index:4;background:var(--paper);border-bottom:2px solid var(--red)}
