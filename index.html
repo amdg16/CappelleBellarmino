@@ -34,11 +34,12 @@
   .band{background:var(--red);color:#fff;padding:calc(env(safe-area-inset-top,0px) + .8rem) 1rem .8rem;display:flex;align-items:center;gap:.9rem}
   .band .txt{flex:1;min-width:0}
   .band .site{font:700 clamp(1.5rem,5.5vw,2.2rem)/1.05 "Cormorant Garamond",Georgia,serif;margin-top:.05rem}
-  .dateRow{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem 1rem .1rem}
-  .datepick{position:relative;display:inline-flex;align-items:baseline;gap:.4rem;border:0;background:none;color:var(--ink);padding:0;cursor:pointer;text-align:left;min-width:0}
-  .datepick .caret{font-size:1rem;color:var(--red)}
+  .dateRow{display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem .1rem}
+  .calBtn{position:relative;flex:none;display:grid;place-items:center;width:2.6rem;height:2.6rem;border:1px solid var(--rule-strong);background:var(--paper);border-radius:.6rem;color:var(--red);cursor:pointer;overflow:hidden}
+  .calBtn svg{width:1.4rem;height:1.4rem;pointer-events:none}
+  .calBtn input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;cursor:pointer;font-size:16px;-webkit-appearance:none;appearance:none;background:transparent}
+  .calBtn:focus-within{outline:2px solid var(--red);outline-offset:2px}
 
-  #date{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
   .gear{flex:none;align-self:flex-start;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;border-radius:.5rem;padding:.3rem .55rem;min-height:2.3rem;cursor:pointer;font-size:.9rem}
   .band img{height:3.4rem;width:auto;flex:none}
   .band small{display:block;font-size:.85rem;opacity:.85;letter-spacing:.02em}
@@ -61,11 +62,17 @@
   .size button:disabled{opacity:.4;cursor:default}
   .openNote{margin:0 1rem .45rem;padding:.5rem .7rem;border-radius:.5rem;background:var(--red-tint);color:var(--red-deep);font-size:.95rem;line-height:1.3}
   .openNote[hidden]{display:none}
+  .foot{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.15rem 1rem .6rem;color:#7A6E6F;font-size:.85rem}
+  .footMark{height:1.45rem;width:auto;flex:none;padding:.3rem;margin:-.3rem;box-sizing:content-box;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+  .footMark.hold{opacity:.45;transition:opacity 1.8s linear}
+  .footExit{border:0;background:none;padding:.2rem 0;color:var(--red);font-weight:700;font-size:.9rem;cursor:pointer}
+  .admin-on .foot{color:var(--red)} .admin-on #footText{display:none}
   .admin-badge{display:none;margin-left:.4rem;color:var(--red);font-weight:700}
   .admin-on .admin-badge{display:inline}
 
   /* Tabellone */
-  .gridWrap{position:relative;flex:1;min-height:0;display:flex;margin:0 .5rem .5rem}
+  .gridWrap{position:relative;flex:1;min-height:0;display:flex;margin:0 .5rem .35rem}
   .scroller{flex:1;overflow:auto;background:var(--paper);border:1px solid var(--rule-strong);border-radius:.6rem;-webkit-overflow-scrolling:touch}
   .fade{position:absolute;top:1px;bottom:1px;width:1.8rem;pointer-events:none;opacity:0;transition:opacity .2s;z-index:5}
   .fade.r{right:1px;border-radius:0 .6rem .6rem 0;background:linear-gradient(to right,rgba(35,28,29,0),rgba(35,28,29,.16))}
@@ -143,10 +150,8 @@
   <button class="gear" id="gear">🌐 IT</button>
 </header>
 <div class="dateRow">
-  <button class="datepick" id="datePick">
-    <span class="day" id="dayLabel">…</span><span class="caret">▾</span>
-    <input type="date" id="date" tabindex="-1" aria-hidden="true">
-  </button>
+  <div class="day" id="dayLabel">…</div>
+  <label class="calBtn" id="calBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><circle cx="8" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="8" cy="17.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="17.5" r="1" fill="currentColor" stroke="none"/></svg><input type="date" id="date"></label>
 </div>
 <nav class="bar">
   <button class="sq" id="prev">‹</button>
@@ -166,6 +171,11 @@
   <div class="scroller" id="scroller"><div class="grid" id="grid"></div></div>
   <div class="fade l" id="fadeL"></div><div class="fade r" id="fadeR"></div>
 </div>
+<footer class="foot">
+  <img class="footMark" id="footMark" src="mark-grey.png" alt="" draggable="false">
+  <span id="footText">© 2026 Collegio Bellarmino</span>
+  <button class="footExit" id="footExit" hidden></button>
+</footer>
 
 <dialog id="bookDlg">
   <form class="dlg" method="dialog">
@@ -212,7 +222,6 @@
       <button data-lang="es">Español</button>
     </div>
     <div class="actions">
-      <button type="button" class="btn" id="adminBtn"></button>
       <button type="button" class="btn primary" id="setClose" data-t="close"></button>
     </div>
   </div>
@@ -230,7 +239,7 @@ const I18N = {
   it: {
     siteTitle:'Cappelle per i gruppi di condivisione', today:'Oggi', wed:'Mercoledì',
     prev:'Giorno precedente', next:'Giorno successivo', all:'Tutte',
-    smaller:'Testo più piccolo', larger:'Testo più grande',
+    smaller:'Testo più piccolo', pickDate:'Scegli una data', larger:'Testo più grande',
     loading:'Caricamento…', updated:'Aggiornato alle {t}', adminBadge:'· Amministratore',
     offline:'Connessione non riuscita. Riprovo tra poco.',
     bookTitle:'Prenota', chapel:'Cappella', start:'Inizio', duration:'Durata', group:'Gruppo', choose:'Scegli…',
@@ -241,7 +250,7 @@ const I18N = {
     mineHint:'Hai fatto tu questa prenotazione da questo dispositivo.',
     onlyOwner:'Solo chi ha prenotato può cancellarla, dal dispositivo usato per prenotare.',
     adminHint:'Modalità amministratore: puoi cancellare qualsiasi prenotazione.',
-    admin:'Accesso amministratore', adminExit:'Esci da amministratore', adminPrompt:'Password amministratore',
+    admin:'Accesso amministratore', adminExit:'Esci da amministratore', adminExitShort:'Esci', adminPrompt:'Password amministratore',
     adminOn:'Modalità amministratore attiva.', adminOff:'Modalità amministratore disattivata.',
     taken:'Occupata da {0} ({1}–{2}).', tooLate:'Termina dopo le {t}: scegli una durata più breve.',
     past:'Questo orario è già passato.', notYet:'Le prenotazioni per questo giorno si aprono {d} alle {t}.', groupDay:'Il gruppo {g} ha già una prenotazione in questo giorno ({c}, {s}–{e}). Per cambiarla, cancella prima quella.', needGroup:'Scegli il gruppo.', needName:'Scrivi il tuo nome.',
@@ -257,7 +266,7 @@ const I18N = {
   en: {
     siteTitle:'Chapels for the sharing groups', today:'Today', wed:'Wednesday',
     prev:'Previous day', next:'Next day', all:'All',
-    smaller:'Smaller text', larger:'Larger text',
+    smaller:'Smaller text', pickDate:'Choose a date', larger:'Larger text',
     loading:'Loading…', updated:'Updated at {t}', adminBadge:'· Admin',
     offline:'Connection failed. Retrying shortly.',
     bookTitle:'Book', chapel:'Chapel', start:'Start', duration:'Duration', group:'Group', choose:'Choose…',
@@ -268,7 +277,7 @@ const I18N = {
     mineHint:'You made this booking from this device.',
     onlyOwner:'Only the person who booked can delete it, from the device used to book.',
     adminHint:'Admin mode: you can delete any booking.',
-    admin:'Admin sign-in', adminExit:'Sign out of admin', adminPrompt:'Admin password',
+    admin:'Admin sign-in', adminExit:'Sign out of admin', adminExitShort:'Sign out', adminPrompt:'Admin password',
     adminOn:'Admin mode on.', adminOff:'Admin mode off.',
     taken:'Taken by {0} ({1}–{2}).', tooLate:'Ends after {t}: choose a shorter duration.',
     past:'This time has already passed.', notYet:'Bookings for this day open on {d} at {t}.', groupDay:'The group {g} already has a booking on this day ({c}, {s}–{e}). To change it, delete that one first.', needGroup:'Choose a group.', needName:'Enter your name.',
@@ -284,7 +293,7 @@ const I18N = {
   fr: {
     siteTitle:'Chapelles pour les groupes de partage', today:'Aujourd’hui', wed:'Mercredi',
     prev:'Jour précédent', next:'Jour suivant', all:'Toutes',
-    smaller:'Texte plus petit', larger:'Texte plus grand',
+    smaller:'Texte plus petit', pickDate:'Choisir une date', larger:'Texte plus grand',
     loading:'Chargement…', updated:'Mis à jour à {t}', adminBadge:'· Administrateur',
     offline:'Connexion impossible. Nouvel essai dans un instant.',
     bookTitle:'Réserver', chapel:'Chapelle', start:'Début', duration:'Durée', group:'Groupe', choose:'Choisir…',
@@ -295,7 +304,7 @@ const I18N = {
     mineHint:'Vous avez fait cette réservation depuis cet appareil.',
     onlyOwner:'Seule la personne qui a réservé peut la supprimer, depuis l’appareil utilisé.',
     adminHint:'Mode administrateur : vous pouvez supprimer toute réservation.',
-    admin:'Accès administrateur', adminExit:'Quitter le mode administrateur', adminPrompt:'Mot de passe administrateur',
+    admin:'Accès administrateur', adminExit:'Quitter le mode administrateur', adminExitShort:'Quitter', adminPrompt:'Mot de passe administrateur',
     adminOn:'Mode administrateur activé.', adminOff:'Mode administrateur désactivé.',
     taken:'Occupée par {0} ({1}–{2}).', tooLate:'Se termine après {t} : choisissez une durée plus courte.',
     past:'Cet horaire est déjà passé.', notYet:'Les réservations pour ce jour ouvrent le {d} à {t}.', groupDay:'Le groupe {g} a déjà une réservation ce jour-là ({c}, {s}–{e}). Pour la changer, supprimez-la d’abord.', needGroup:'Choisissez un groupe.', needName:'Indiquez votre nom.',
@@ -311,7 +320,7 @@ const I18N = {
   es: {
     siteTitle:'Capillas para los grupos de compartir', today:'Hoy', wed:'Miércoles',
     prev:'Día anterior', next:'Día siguiente', all:'Todas',
-    smaller:'Texto más pequeño', larger:'Texto más grande',
+    smaller:'Texto más pequeño', pickDate:'Elegir una fecha', larger:'Texto más grande',
     loading:'Cargando…', updated:'Actualizado a las {t}', adminBadge:'· Administrador',
     offline:'Error de conexión. Reintentando en breve.',
     bookTitle:'Reservar', chapel:'Capilla', start:'Inicio', duration:'Duración', group:'Grupo', choose:'Elegir…',
@@ -322,7 +331,7 @@ const I18N = {
     mineHint:'Hiciste esta reserva desde este dispositivo.',
     onlyOwner:'Solo quien reservó puede eliminarla, desde el dispositivo que usó.',
     adminHint:'Modo administrador: puedes eliminar cualquier reserva.',
-    admin:'Acceso de administrador', adminExit:'Salir del modo administrador', adminPrompt:'Contraseña de administrador',
+    admin:'Acceso de administrador', adminExit:'Salir del modo administrador', adminExitShort:'Salir', adminPrompt:'Contraseña de administrador',
     adminOn:'Modo administrador activado.', adminOff:'Modo administrador desactivado.',
     taken:'Ocupada por {0} ({1}–{2}).', tooLate:'Termina después de las {t}: elige una duración más corta.',
     past:'Esta hora ya ha pasado.', notYet:'Las reservas para este día se abren el {d} a las {t}.', groupDay:'El grupo {g} ya tiene una reserva este día ({c}, {s}–{e}). Para cambiarla, elimina primero esa.', needGroup:'Elige un grupo.', needName:'Escribe tu nombre.',
@@ -452,6 +461,7 @@ let lastSync = null;          // null | 'loading' | 'offline' | minuti
 let floorFilter = store.get('floor') || 'all';
 let openId = null;
 let cfgFresh = false;         // la configurazione viene riletta dal server una volta per apertura
+let autoDate = true;          // si sta guardando il mercoledì più vicino: segue il calendario da solo
 
 function setCfg(cfg){
   CFG = cfg;
@@ -492,7 +502,9 @@ function showSync(){
   $('#sync').textContent = lastSync === 'loading' ? T('loading')
     : lastSync === 'offline' ? T('offline')
     : lastSync == null ? '' : T('updated', { t: toHM(lastSync) });
-  $('#adminBtn').textContent = adminPw ? T('adminExit') : T('admin');
+  $('#footExit').hidden = !adminPw;
+  $('#footMark').src = adminPw ? 'mark-red.png' : 'mark-grey.png';
+  $('#footExit').textContent = 'Amministratore · ' + T('adminExitShort');
   document.body.classList.toggle('admin-on', !!adminPw);
 }
 
@@ -551,6 +563,7 @@ function render(){
 
 function setDate(d){
   current = d; scrollToFocus = true; bookings = [];
+  autoDate = (d === nextWed(todayISO()));
   $('#date').value = d;
   updateHeader();
   render(); load();
@@ -596,7 +609,7 @@ function setLang(l){
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = T(el.dataset.t); });
   document.title = T('siteTitle') + ' · Collegio Bellarmino';
-  [['#prev','prev'],['#next','next'],['#smaller','smaller'],['#larger','larger']]
+  [['#prev','prev'],['#next','next'],['#smaller','smaller'],['#larger','larger'],['#date','pickDate'],['#calBtn','pickDate']]
     .forEach(([id, k]) => { $(id).setAttribute('aria-label', T(k)); $(id).title = T(k); });
   fillForm(); renderFloors(); updateHeader(); showSync(); render();
   if ($('#bookDlg').open){ $('#bookSub').textContent = longDate(current); check(); }
@@ -701,16 +714,31 @@ $('#iDel').addEventListener('click', async () => {
 $('#iClose').addEventListener('click', () => $('#infoDlg').close());
 
 /* ---------- Amministratore ---------- */
-$('#adminBtn').addEventListener('click', async () => {
-  $('#setDlg').close();
-  if (adminPw){ adminPw = ''; store.del('admin'); showSync(); render(); toast(T('adminOff')); return; }
+async function adminLogin(){
   const pw = prompt(T('adminPrompt'));
   if (!pw) return;
   try {
     await apiPost({ action: 'admin', admin: pw });
     adminPw = pw; store.set('admin', pw); showSync(); render(); toast(T('adminOn'));
   } catch(err){ toast(errText(err)); }
-});
+}
+function adminLogout(){ adminPw = ''; store.del('admin'); showSync(); render(); toast(T('adminOff')); }
+$('#footExit').addEventListener('click', adminLogout);
+
+// ingresso nascosto: tenere premuto lo stemma in fondo alla pagina per 2 secondi
+(function(){
+  const mark = $('#footMark');
+  let timer = 0;
+  const stop = () => { clearTimeout(timer); timer = 0; mark.classList.remove('hold'); };
+  mark.addEventListener('pointerdown', e => {
+    if (adminPw) return;
+    e.preventDefault();
+    mark.classList.add('hold');
+    timer = setTimeout(() => { stop(); adminLogin(); }, 2000);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => mark.addEventListener(ev, stop));
+  mark.addEventListener('contextmenu', e => e.preventDefault());
+})();
 
 /* ---------- Indicatore delle cappelle visibili (puntini) ---------- */
 function updateDots(){
@@ -759,20 +787,28 @@ $('#prev').addEventListener('click', () => setDate(addDays(current, -1)));
 $('#next').addEventListener('click', () => setDate(addDays(current, 1)));
 $('#today').addEventListener('click', () => setDate(todayISO()));
 $('#wed').addEventListener('click', () => setDate(nextWed(todayISO())));
-$('#date').addEventListener('change', e => { if (e.target.value) setDate(e.target.value); });
-$('#datePick').addEventListener('click', () => {
-  const inp = $('#date');
-  try { inp.showPicker(); } catch(e){ inp.style.pointerEvents = 'auto'; inp.focus(); inp.click(); inp.style.pointerEvents = ''; }
-});
+['change','input'].forEach(ev => $('#date').addEventListener(ev, e => {
+  if (e.target.value && e.target.value !== current) setDate(e.target.value);
+}));
+// l'utente tocca direttamente il campo data (trasparente sopra l'icona): funziona anche su iPhone
+$('#date').addEventListener('click', e => { try { e.currentTarget.showPicker(); } catch(_){} });
 $('#gear').addEventListener('click', () => { showSync(); $('#setDlg').showModal(); });
 $('#setClose').addEventListener('click', () => $('#setDlg').close());
+// tocco fuori dalla finestra (sullo sfondo scuro) = chiudi; vale per lingua e dettagli, non per il modulo di prenotazione
+['#setDlg', '#infoDlg'].forEach(id => $(id).addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); }));
 document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
 $('#smaller').addEventListener('click', () => changeScale(-1));
 $('#larger').addEventListener('click', () => changeScale(1));
 
 const dialogOpen = () => $('#bookDlg').open || $('#infoDlg').open || $('#setDlg').open;
-setInterval(() => { if (!document.hidden && !dialogOpen()) load(true); }, 30000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden && !dialogOpen()) load(true); });
+function tick(){
+  if (document.hidden || dialogOpen()) return;
+  const target = nextWed(todayISO());
+  if (autoDate && current !== target) setDate(target);   // es. è arrivato giovedì: passa al mercoledì successivo
+  else { updateHeader(); load(true); }
+}
+setInterval(tick, 30000);
+document.addEventListener('visibilitychange', tick);
 
 /* ---------- Avvio ---------- */
 (function start(){
