@@ -244,7 +244,7 @@ const I18N = {
     admin:'Accesso amministratore', adminExit:'Esci da amministratore', adminPrompt:'Password amministratore',
     adminOn:'Modalità amministratore attiva.', adminOff:'Modalità amministratore disattivata.',
     taken:'Occupata da {0} ({1}–{2}).', tooLate:'Termina dopo le {t}: scegli una durata più breve.',
-    past:'Questo orario è già passato.', notYet:'Le prenotazioni per questo giorno si aprono {d} alle {t}.', needGroup:'Scegli il gruppo.', needName:'Scrivi il tuo nome.',
+    past:'Questo orario è già passato.', notYet:'Le prenotazioni per questo giorno si aprono {d} alle {t}.', groupDay:'Il gruppo {g} ha già una prenotazione in questo giorno ({c}, {s}–{e}). Per cambiarla, cancella prima quella.', needGroup:'Scegli il gruppo.', needName:'Scrivi il tuo nome.',
     f0:'Pianterreno', f2:'2° piano', f2i:'Secondo intermedio', f3:'3° piano',
     E_DATE:'Data non valida.', E_PAST:'Non si può prenotare nel passato.', E_CHAPEL:'Cappella non valida.',
     E_START:'Orario di inizio non valido.', E_DUR:'Durata non valida.', E_RANGE:'Orario fuori dalla fascia consentita.',
@@ -271,7 +271,7 @@ const I18N = {
     admin:'Admin sign-in', adminExit:'Sign out of admin', adminPrompt:'Admin password',
     adminOn:'Admin mode on.', adminOff:'Admin mode off.',
     taken:'Taken by {0} ({1}–{2}).', tooLate:'Ends after {t}: choose a shorter duration.',
-    past:'This time has already passed.', notYet:'Bookings for this day open on {d} at {t}.', needGroup:'Choose a group.', needName:'Enter your name.',
+    past:'This time has already passed.', notYet:'Bookings for this day open on {d} at {t}.', groupDay:'The group {g} already has a booking on this day ({c}, {s}–{e}). To change it, delete that one first.', needGroup:'Choose a group.', needName:'Enter your name.',
     f0:'Ground floor', f2:'2nd floor', f2i:'2nd floor, intermediate level', f3:'3rd floor',
     E_DATE:'Invalid date.', E_PAST:'Bookings in the past are not allowed.', E_CHAPEL:'Invalid chapel.',
     E_START:'Invalid start time.', E_DUR:'Invalid duration.', E_RANGE:'Time outside the allowed hours.',
@@ -298,7 +298,7 @@ const I18N = {
     admin:'Accès administrateur', adminExit:'Quitter le mode administrateur', adminPrompt:'Mot de passe administrateur',
     adminOn:'Mode administrateur activé.', adminOff:'Mode administrateur désactivé.',
     taken:'Occupée par {0} ({1}–{2}).', tooLate:'Se termine après {t} : choisissez une durée plus courte.',
-    past:'Cet horaire est déjà passé.', notYet:'Les réservations pour ce jour ouvrent le {d} à {t}.', needGroup:'Choisissez un groupe.', needName:'Indiquez votre nom.',
+    past:'Cet horaire est déjà passé.', notYet:'Les réservations pour ce jour ouvrent le {d} à {t}.', groupDay:'Le groupe {g} a déjà une réservation ce jour-là ({c}, {s}–{e}). Pour la changer, supprimez-la d’abord.', needGroup:'Choisissez un groupe.', needName:'Indiquez votre nom.',
     f0:'Rez-de-chaussée', f2:'2e étage', f2i:'2e étage, niveau intermédiaire', f3:'3e étage',
     E_DATE:'Date non valide.', E_PAST:'Impossible de réserver dans le passé.', E_CHAPEL:'Chapelle non valide.',
     E_START:'Heure de début non valide.', E_DUR:'Durée non valide.', E_RANGE:'Horaire en dehors de la plage autorisée.',
@@ -325,7 +325,7 @@ const I18N = {
     admin:'Acceso de administrador', adminExit:'Salir del modo administrador', adminPrompt:'Contraseña de administrador',
     adminOn:'Modo administrador activado.', adminOff:'Modo administrador desactivado.',
     taken:'Ocupada por {0} ({1}–{2}).', tooLate:'Termina después de las {t}: elige una duración más corta.',
-    past:'Esta hora ya ha pasado.', notYet:'Las reservas para este día se abren el {d} a las {t}.', needGroup:'Elige un grupo.', needName:'Escribe tu nombre.',
+    past:'Esta hora ya ha pasado.', notYet:'Las reservas para este día se abren el {d} a las {t}.', groupDay:'El grupo {g} ya tiene una reserva este día ({c}, {s}–{e}). Para cambiarla, elimina primero esa.', needGroup:'Elige un grupo.', needName:'Escribe tu nombre.',
     f0:'Planta baja', f2:'2.ª planta', f2i:'2.ª planta, nivel intermedio', f3:'3.ª planta',
     E_DATE:'Fecha no válida.', E_PAST:'No se puede reservar en el pasado.', E_CHAPEL:'Capilla no válida.',
     E_START:'Hora de inicio no válida.', E_DUR:'Duración no válida.', E_RANGE:'Horario fuera de la franja permitida.',
@@ -348,6 +348,7 @@ function errText(err){
   if (!m) return T('E_GENERIC');
   const parts = m[0].split('|');
   if (parts[0] === 'E_TAKEN') return T('taken', { 0: parts[1], 1: parts[2], 2: parts[3] });
+  if (parts[0] === 'E_GROUPDAY') return T('groupDay', { g: parts[1], c: chapelName(parts[2]), s: parts[3], e: parts[4] });
   if (parts[0] === 'E_NOTYET') return T('notYet', { d: plainDate(parts[1]), t: parts[2] });
   return T(parts[0]);
 }
@@ -636,12 +637,16 @@ function check(){
   else {
     const c = bookings.find(b => b.chapel === f.chapel && toMin(b.start) < e && s < toMin(b.end));
     if (c) msg = T('taken', { 0: c.group, 1: c.start, 2: c.end });
+    else if (f.group && !adminPw && CFG.onePerGroup !== false){
+      const g = bookings.find(b => b.group === f.group);
+      if (g) msg = T('groupDay', { g: g.group, c: chapelName(g.chapel), s: g.start, e: g.end });
+    }
   }
   $('#warn').textContent = msg;
   $('#bookOk').disabled = !!msg;
   return !msg;
 }
-['#fChapel','#fStart','#fDur'].forEach(id => $(id).addEventListener('change', check));
+['#fChapel','#fStart','#fDur','#fGroup'].forEach(id => $(id).addEventListener('change', check));
 $('#bookCancel').addEventListener('click', () => $('#bookDlg').close());
 
 $('#bookOk').addEventListener('click', async () => {
