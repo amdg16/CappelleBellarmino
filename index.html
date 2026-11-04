@@ -35,10 +35,6 @@
   .band .txt{flex:1;min-width:0}
   .band .site{font:700 clamp(1.5rem,5.5vw,2.2rem)/1.05 "Cormorant Garamond",Georgia,serif;margin-top:.05rem}
   .dateRow{display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem .1rem}
-  .calBtn{position:relative;flex:none;display:grid;place-items:center;width:2.6rem;height:2.6rem;border:1px solid var(--rule-strong);background:var(--paper);border-radius:.6rem;color:var(--red);cursor:pointer;overflow:hidden}
-  .calBtn svg{width:1.4rem;height:1.4rem;pointer-events:none}
-  .calBtn input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;cursor:pointer;font-size:16px;-webkit-appearance:none;appearance:none;background:transparent}
-  .calBtn:focus-within{outline:2px solid var(--red);outline-offset:2px}
 
   .gear{flex:none;align-self:flex-start;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;border-radius:.5rem;padding:.3rem .55rem;min-height:2.3rem;cursor:pointer;font-size:.9rem}
   .band img{height:3.4rem;width:auto;flex:none}
@@ -50,6 +46,7 @@
 
   .bar{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;padding:.4rem 1rem .4rem}
   .bar button{border:1px solid var(--rule-strong);background:var(--paper);border-radius:.5rem;padding:.3rem .55rem;min-height:2.3rem;cursor:pointer;font-size:1rem}
+  .bar button:disabled{opacity:.35;cursor:default}
   .bar .sq{min-width:2.3rem;padding:0 .35rem;line-height:1}
   .bar .spacer{flex:1}
   .is-on{background:var(--red)!important;color:#fff!important;border-color:var(--red)!important}
@@ -104,6 +101,9 @@
   .cell.past{background:var(--past);cursor:default}
   .bk{z-index:1;margin:1px 3px;border:0;border-left:4px solid hsl(var(--h) 40% 36%);border-radius:.4rem;
       background:hsl(var(--h) 45% 90%);text-align:left;padding:.15rem .4rem;overflow:hidden;cursor:pointer;line-height:1.15}
+  .blk{z-index:1;margin:1px 3px;border-radius:.4rem;padding:.2rem .45rem;overflow:hidden;line-height:1.2;font-size:.8rem;color:#5A5051;
+       background:repeating-linear-gradient(135deg,#ECE8E8 0 6px,#E3DDDD 6px 12px);border-left:4px solid #A89C9D;pointer-events:none}
+  .blk b{display:block;font-size:.82rem;color:#3F3637}
   .bk.mine{box-shadow:inset 0 0 0 2px hsl(var(--h) 40% 36%)}
   .bk b{display:block;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bk span,.bk small{display:block;font-size:.78rem;color:#3a3132;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -152,12 +152,10 @@
 </header>
 <div class="dateRow">
   <div class="day" id="dayLabel">…</div>
-  <label class="calBtn" id="calBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><circle cx="8" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="8" cy="17.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="17.5" r="1" fill="currentColor" stroke="none"/></svg><input type="date" id="date"></label>
 </div>
 <nav class="bar">
   <button class="sq" id="prev">‹</button>
   <button class="sq" id="next">›</button>
-  <button id="today" data-t="today"></button>
   <button id="wed" data-t="wed"></button>
 </nav>
 <div class="floors" id="floors"></div>
@@ -254,8 +252,8 @@ const I18N = {
     admin:'Accesso amministratore', adminExit:'Esci da amministratore', adminExitShort:'Esci', adminPrompt:'Password amministratore',
     adminOn:'Modalità amministratore attiva.', adminOff:'Modalità amministratore disattivata.',
     taken:'Occupata da {0} ({1}–{2}).', tooLate:'Termina dopo le {t}: scegli una durata più breve.',
-    past:'Questo orario è già passato.', notYet:'Le prenotazioni per questo giorno si aprono {d} alle {t}.', groupDay:'Il gruppo {g} ha già una prenotazione in questo giorno ({c}, {s}–{e}). Per cambiarla, cancella prima quella.', needGroup:'Scegli il gruppo.', needName:'Scrivi il tuo nome.',
-    f0:'Pianterreno', f2:'2° piano', f2i:'Secondo intermedio', f3:'3° piano',
+    past:'Questo orario è già passato.', suoreBlock:'Suore · Messa e Vespri', blocked:'Questa fascia è riservata: {l} ({s}–{e}).', E_WEEKDAY:'Si può prenotare solo il mercoledì.', notYet:'Le prenotazioni per questo giorno si aprono {d} alle {t}.', groupDay:'Il gruppo {g} ha già una prenotazione in questo giorno ({c}, {s}–{e}). Per cambiarla, cancella prima quella.', needGroup:'Scegli il gruppo.', needName:'Scrivi il tuo nome.',
+    f0:'Pianterreno', f1:'1° piano', f2:'2° piano', f2i:'Secondo intermedio', f3:'3° piano',
     E_DATE:'Data non valida.', E_PAST:'Non si può prenotare nel passato.', E_CHAPEL:'Cappella non valida.',
     E_START:'Orario di inizio non valido.', E_DUR:'Durata non valida.', E_RANGE:'Orario fuori dalla fascia consentita.',
     E_GROUP:'Scegli il gruppo.', E_NAME:'Scrivi il tuo nome.',
@@ -281,8 +279,8 @@ const I18N = {
     admin:'Admin sign-in', adminExit:'Sign out of admin', adminExitShort:'Sign out', adminPrompt:'Admin password',
     adminOn:'Admin mode on.', adminOff:'Admin mode off.',
     taken:'Taken by {0} ({1}–{2}).', tooLate:'Ends after {t}: choose a shorter duration.',
-    past:'This time has already passed.', notYet:'Bookings for this day open on {d} at {t}.', groupDay:'The group {g} already has a booking on this day ({c}, {s}–{e}). To change it, delete that one first.', needGroup:'Choose a group.', needName:'Enter your name.',
-    f0:'Ground floor', f2:'2nd floor', f2i:'2nd floor, intermediate level', f3:'3rd floor',
+    past:'This time has already passed.', suoreBlock:'Sisters · Mass and Vespers', blocked:'This time is reserved: {l} ({s}–{e}).', E_WEEKDAY:'Bookings are only for Wednesdays.', notYet:'Bookings for this day open on {d} at {t}.', groupDay:'The group {g} already has a booking on this day ({c}, {s}–{e}). To change it, delete that one first.', needGroup:'Choose a group.', needName:'Enter your name.',
+    f0:'Ground floor', f1:'1st floor', f2:'2nd floor', f2i:'2nd floor, intermediate level', f3:'3rd floor',
     E_DATE:'Invalid date.', E_PAST:'Bookings in the past are not allowed.', E_CHAPEL:'Invalid chapel.',
     E_START:'Invalid start time.', E_DUR:'Invalid duration.', E_RANGE:'Time outside the allowed hours.',
     E_GROUP:'Choose a group.', E_NAME:'Enter your name.',
@@ -308,8 +306,8 @@ const I18N = {
     admin:'Accès administrateur', adminExit:'Quitter le mode administrateur', adminExitShort:'Quitter', adminPrompt:'Mot de passe administrateur',
     adminOn:'Mode administrateur activé.', adminOff:'Mode administrateur désactivé.',
     taken:'Occupée par {0} ({1}–{2}).', tooLate:'Se termine après {t} : choisissez une durée plus courte.',
-    past:'Cet horaire est déjà passé.', notYet:'Les réservations pour ce jour ouvrent le {d} à {t}.', groupDay:'Le groupe {g} a déjà une réservation ce jour-là ({c}, {s}–{e}). Pour la changer, supprimez-la d’abord.', needGroup:'Choisissez un groupe.', needName:'Indiquez votre nom.',
-    f0:'Rez-de-chaussée', f2:'2e étage', f2i:'2e étage, niveau intermédiaire', f3:'3e étage',
+    past:'Cet horaire est déjà passé.', suoreBlock:'Sœurs · Messe et Vêpres', blocked:'Ce créneau est réservé : {l} ({s}–{e}).', E_WEEKDAY:'On ne peut réserver que le mercredi.', notYet:'Les réservations pour ce jour ouvrent le {d} à {t}.', groupDay:'Le groupe {g} a déjà une réservation ce jour-là ({c}, {s}–{e}). Pour la changer, supprimez-la d’abord.', needGroup:'Choisissez un groupe.', needName:'Indiquez votre nom.',
+    f0:'Rez-de-chaussée', f1:'1er étage', f2:'2e étage', f2i:'2e étage, niveau intermédiaire', f3:'3e étage',
     E_DATE:'Date non valide.', E_PAST:'Impossible de réserver dans le passé.', E_CHAPEL:'Chapelle non valide.',
     E_START:'Heure de début non valide.', E_DUR:'Durée non valide.', E_RANGE:'Horaire en dehors de la plage autorisée.',
     E_GROUP:'Choisissez un groupe.', E_NAME:'Indiquez votre nom.',
@@ -335,8 +333,8 @@ const I18N = {
     admin:'Acceso de administrador', adminExit:'Salir del modo administrador', adminExitShort:'Salir', adminPrompt:'Contraseña de administrador',
     adminOn:'Modo administrador activado.', adminOff:'Modo administrador desactivado.',
     taken:'Ocupada por {0} ({1}–{2}).', tooLate:'Termina después de las {t}: elige una duración más corta.',
-    past:'Esta hora ya ha pasado.', notYet:'Las reservas para este día se abren el {d} a las {t}.', groupDay:'El grupo {g} ya tiene una reserva este día ({c}, {s}–{e}). Para cambiarla, elimina primero esa.', needGroup:'Elige un grupo.', needName:'Escribe tu nombre.',
-    f0:'Planta baja', f2:'2.ª planta', f2i:'2.ª planta, nivel intermedio', f3:'3.ª planta',
+    past:'Esta hora ya ha pasado.', suoreBlock:'Hermanas · Misa y Vísperas', blocked:'Esta franja está reservada: {l} ({s}–{e}).', E_WEEKDAY:'Solo se puede reservar los miércoles.', notYet:'Las reservas para este día se abren el {d} a las {t}.', groupDay:'El grupo {g} ya tiene una reserva este día ({c}, {s}–{e}). Para cambiarla, elimina primero esa.', needGroup:'Elige un grupo.', needName:'Escribe tu nombre.',
+    f0:'Planta baja', f1:'1.ª planta', f2:'2.ª planta', f2i:'2.ª planta, nivel intermedio', f3:'3.ª planta',
     E_DATE:'Fecha no válida.', E_PAST:'No se puede reservar en el pasado.', E_CHAPEL:'Capilla no válida.',
     E_START:'Hora de inicio no válida.', E_DUR:'Duración no válida.', E_RANGE:'Horario fuera de la franja permitida.',
     E_GROUP:'Elige un grupo.', E_NAME:'Escribe tu nombre.',
@@ -359,6 +357,7 @@ function errText(err){
   const parts = m[0].split('|');
   if (parts[0] === 'E_TAKEN') return T('taken', { 0: parts[1], 1: parts[2], 2: parts[3] });
   if (parts[0] === 'E_GROUPDAY') return T('groupDay', { g: parts[1], c: chapelName(parts[2]), s: parts[3], e: parts[4] });
+  if (parts[0] === 'E_BLOCKED') return T('blocked', { l: parts[1] ? T(parts[1]) : parts[2], s: parts[3], e: parts[4] });
   if (parts[0] === 'E_NOTYET') return T('notYet', { d: plainDate(parts[1]), t: parts[2] });
   return T(parts[0]);
 }
@@ -540,9 +539,17 @@ function render(){
     h += `<div class="tm ${cls}${s === 0 ? ' first' : ''}" style="grid-row:${row}">${t % 30 === 0 ? toHM(t) : ''}</div>`;
     const past = t + STEP <= now || !open;
     vis.forEach(({ c, i }, k) => {
-      h += `<button class="cell ${cls}${past ? ' past' : ''}" style="grid-row:${row};grid-column:${k+2}" data-c="${i}" data-t="${t}"${past ? ' disabled' : ''} aria-label="${esc(c.short)} ${toHM(t)}"></button>`;
+      const off = past || !!blockAt(c.id, t, t + STEP);
+      h += `<button class="cell ${cls}${off ? ' past' : ''}" style="grid-row:${row};grid-column:${k+2}" data-c="${i}" data-t="${t}"${off ? ' disabled' : ''} aria-label="${esc(c.short)} ${toHM(t)}"></button>`;
     });
   }
+  (CFG.blocks || []).forEach(bl => {
+    const k = vis.findIndex(x => x.c.id === bl.chapel);
+    if (k < 0) return;
+    const s = Math.max(0, (toMin(bl.start) - START) / STEP), e = Math.min(N, (toMin(bl.end) - START) / STEP);
+    if (e <= s) return;
+    h += `<div class="blk" style="grid-row:${s+2} / ${e+2};grid-column:${k+2}"><b>${esc(blockLabel(bl))}</b>${esc(bl.start)}–${esc(bl.end)}</div>`;
+  });
   bookings.forEach(b => {
     const k = vis.findIndex(x => x.c.id === b.chapel);
     if (k < 0) return;
@@ -562,10 +569,22 @@ function render(){
   else { sc.scrollTop = keepTop; sc.scrollLeft = keepLeft; }
 }
 
+function blockAt(chapel, s, e){
+  return (CFG && CFG.blocks || []).find(b => b.chapel === chapel && toMin(b.start) < e && s < toMin(b.end));
+}
+function blockLabel(bl){ return bl.key && I18N.it[bl.key] ? T(bl.key) : bl.label; }
+// › arriva solo fino al primo mercoledì non ancora aperto (l'amministratore può andare più avanti)
+function lastWed(){
+  let w = nextWed(todayISO());
+  if (adminPw) return addDays(w, 7 * 26);
+  for (let i = 0; i < 52 && isOpen(w); i++) w = addDays(w, 7);
+  return w;
+}
 function setDate(d){
+  d = nextWed(d);                               // sempre un mercoledì
+  const max = lastWed(); if (d > max) d = max;
   current = d; scrollToFocus = true; bookings = [];
   autoDate = (d === nextWed(todayISO()));
-  $('#date').value = d;
   updateHeader();
   render(); load();
 }
@@ -581,8 +600,8 @@ function dayHTML(s){
 }
 function updateHeader(){
   $('#dayLabel').innerHTML = dayHTML(current);
-  $('#today').classList.toggle('is-on', current === todayISO());
   $('#wed').classList.toggle('is-on', current === nextWed(todayISO()));
+  $('#next').disabled = current >= lastWed();
 }
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 4500); }
 
@@ -610,7 +629,7 @@ function setLang(l){
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = T(el.dataset.t); });
   document.title = T('siteTitle') + ' · Collegio Bellarmino';
-  [['#prev','prev'],['#next','next'],['#smaller','smaller'],['#larger','larger'],['#date','pickDate'],['#calBtn','pickDate']]
+  [['#prev','prev'],['#next','next'],['#smaller','smaller'],['#larger','larger']]
     .forEach(([id, k]) => { $(id).setAttribute('aria-label', T(k)); $(id).title = T(k); });
   fillForm(); renderFloors(); updateHeader(); showSync(); render();
   if ($('#bookDlg').open){ $('#bookSub').textContent = longDate(current); check(); }
@@ -650,7 +669,9 @@ function check(){
   else if (!isOpen(current)) msg = T('notYet', { d: plainDate(openDateFor(current)), t: openTime() });
   else {
     const c = bookings.find(b => b.chapel === f.chapel && toMin(b.start) < e && s < toMin(b.end));
-    if (c) msg = T('taken', { 0: c.group, 1: c.start, 2: c.end });
+    const bl = blockAt(f.chapel, s, e);
+    if (bl) msg = T('blocked', { l: blockLabel(bl), s: bl.start, e: bl.end });
+    else if (c) msg = T('taken', { 0: c.group, 1: c.start, 2: c.end });
     else if (f.group && !adminPw && CFG.onePerGroup !== false){
       const g = bookings.find(b => b.group === f.group);
       if (g) msg = T('groupDay', { g: g.group, c: chapelName(g.chapel), s: g.start, e: g.end });
@@ -784,15 +805,9 @@ $('#floors').addEventListener('click', e => {
   floorFilter = b.dataset.floor; store.set('floor', floorFilter);
   renderFloors(); render();
 });
-$('#prev').addEventListener('click', () => setDate(addDays(current, -1)));
-$('#next').addEventListener('click', () => setDate(addDays(current, 1)));
-$('#today').addEventListener('click', () => setDate(todayISO()));
+$('#prev').addEventListener('click', () => setDate(addDays(current, -7)));
+$('#next').addEventListener('click', () => setDate(addDays(current, 7)));
 $('#wed').addEventListener('click', () => setDate(nextWed(todayISO())));
-['change','input'].forEach(ev => $('#date').addEventListener(ev, e => {
-  if (e.target.value && e.target.value !== current) setDate(e.target.value);
-}));
-// l'utente tocca direttamente il campo data (trasparente sopra l'icona): funziona anche su iPhone
-$('#date').addEventListener('click', e => { try { e.currentTarget.showPicker(); } catch(_){} });
 $('#gear').addEventListener('click', () => { showSync(); $('#setDlg').showModal(); });
 $('#setClose').addEventListener('click', () => $('#setDlg').close());
 // tocco fuori dalla finestra (sullo sfondo scuro) = chiudi; vale per lingua e dettagli, non per il modulo di prenotazione
