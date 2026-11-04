@@ -57,6 +57,12 @@
   .size{display:flex;gap:.3rem;flex:none}
   .size button{border:1px solid var(--rule-strong);background:var(--paper);border-radius:.5rem;min-width:2.5rem;min-height:2.2rem;cursor:pointer;font-size:1rem;color:var(--ink);font-weight:700}
   .size button:disabled{opacity:.4;cursor:default}
+  .tags{display:flex;flex-wrap:wrap;gap:.35rem;padding:.3rem 1rem 0}
+  .tags:empty{display:none}
+  .tag{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.15rem .65rem;font-size:.88rem;font-weight:500;line-height:1.3}
+  .tag.today{background:var(--red);color:#fff}
+  .tag.gm{background:var(--red-tint);color:var(--red-deep);border:1px solid #E7C3C6}
+  .tag.gm::before{content:"";width:.45rem;height:.45rem;border-radius:50%;background:var(--red)}
   .openNote{margin:0 1rem .45rem;padding:.5rem .7rem;border-radius:.5rem;background:var(--red-tint);color:var(--red-deep);font-size:.95rem;line-height:1.3}
   .openNote[hidden]{display:none}
   .foot{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.15rem 1rem .6rem;color:#7A6E6F;font-size:.85rem}
@@ -136,7 +142,13 @@
     :root{--colw:7.3rem;--timew:2.9rem} .ch{padding-left:.4rem;padding-right:.35rem} .ch b{font-size:.86rem}
     .band{padding-left:.7rem;padding-right:.7rem;gap:.6rem} .band img{height:2.6rem}
     .band small{font-size:.75rem} .gear .code{display:none}
-    .dateRow,.bar,.floors,.sync{padding-left:.6rem;padding-right:.6rem} .openNote{margin-left:.6rem;margin-right:.6rem} .gridWrap{margin:0 .25rem .25rem}
+    .dateRow,.tags,.bar,.floors,.sync{padding-left:.6rem;padding-right:.6rem} .tags{display:flex;flex-wrap:wrap;gap:.35rem;padding:.3rem 1rem 0}
+  .tags:empty{display:none}
+  .tag{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.15rem .65rem;font-size:.88rem;font-weight:500;line-height:1.3}
+  .tag.today{background:var(--red);color:#fff}
+  .tag.gm{background:var(--red-tint);color:var(--red-deep);border:1px solid #E7C3C6}
+  .tag.gm::before{content:"";width:.45rem;height:.45rem;border-radius:50%;background:var(--red)}
+  .openNote{margin-left:.6rem;margin-right:.6rem} .gridWrap{margin:0 .25rem .25rem}
   }
   @media (prefers-reduced-motion:reduce){ #toast,.fade{transition:none} }
 </style>
@@ -153,10 +165,10 @@
 <div class="dateRow">
   <div class="day" id="dayLabel">…</div>
 </div>
+<div class="tags" id="tags"></div>
 <nav class="bar">
   <button class="sq" id="prev">‹</button>
   <button class="sq" id="next">›</button>
-  <button id="wed" data-t="wed"></button>
 </nav>
 <div class="floors" id="floors"></div>
 <div class="sync">
@@ -236,7 +248,7 @@ const API = 'https://script.google.com/macros/s/AKfycbxUZXH2XNpQies6jE_vw9wRjz1P
 /* ---------- Traduzioni ---------- */
 const I18N = {
   it: {
-    siteTitle:'Cappelle per i gruppi di condivisione', today:'Oggi', wed:'Mercoledì',
+    siteTitle:'Cappelle per i gruppi di condivisione', today:'Oggi', wed:'Mercoledì', groupMass:'Messa dei gruppi di condivisione',
     prev:'Giorno precedente', next:'Giorno successivo', all:'Tutte',
     smaller:'Testo più piccolo', pickDate:'Scegli una data', larger:'Testo più grande',
     loading:'Caricamento…', updated:'Aggiornato alle {t}', adminBadge:'· Amministratore',
@@ -263,7 +275,7 @@ const I18N = {
     E_NET:'Connessione non riuscita. Controlla la rete e riprova.', E_GENERIC:'Operazione non riuscita. Riprova.'
   },
   en: {
-    siteTitle:'Chapels for the sharing groups', today:'Today', wed:'Wednesday',
+    siteTitle:'Chapels for the sharing groups', today:'Today', wed:'Wednesday', groupMass:'Sharing-group Mass',
     prev:'Previous day', next:'Next day', all:'All',
     smaller:'Smaller text', pickDate:'Choose a date', larger:'Larger text',
     loading:'Loading…', updated:'Updated at {t}', adminBadge:'· Admin',
@@ -290,7 +302,7 @@ const I18N = {
     E_NET:'Connection failed. Check your network and try again.', E_GENERIC:'Something went wrong. Try again.'
   },
   fr: {
-    siteTitle:'Chapelles pour les groupes de partage', today:'Aujourd’hui', wed:'Mercredi',
+    siteTitle:'Chapelles pour les groupes de partage', today:'Aujourd’hui', wed:'Mercredi', groupMass:'Messe des groupes de partage',
     prev:'Jour précédent', next:'Jour suivant', all:'Toutes',
     smaller:'Texte plus petit', pickDate:'Choisir une date', larger:'Texte plus grand',
     loading:'Chargement…', updated:'Mis à jour à {t}', adminBadge:'· Administrateur',
@@ -317,7 +329,7 @@ const I18N = {
     E_NET:'Connexion impossible. Vérifiez le réseau et réessayez.', E_GENERIC:'L’opération a échoué. Réessayez.'
   },
   es: {
-    siteTitle:'Capillas para los grupos de compartir', today:'Hoy', wed:'Miércoles',
+    siteTitle:'Capillas para los grupos de compartir', today:'Hoy', wed:'Miércoles', groupMass:'Misa de los grupos de compartir',
     prev:'Día anterior', next:'Día siguiente', all:'Todas',
     smaller:'Texto más pequeño', pickDate:'Elegir una fecha', larger:'Texto más grande',
     loading:'Cargando…', updated:'Actualizado a las {t}', adminBadge:'· Administrador',
@@ -467,7 +479,7 @@ function setCfg(cfg){
   CFG = cfg;
   START = toMin(CFG.dayStart); END = toMin(CFG.dayEnd); STEP = CFG.step; N = (END - START) / STEP;
   store.set('cfg', JSON.stringify(cfg));
-  fillForm(); renderFloors(); render();
+  fillForm(); renderFloors(); updateHeader(); render();
 }
 const floorKey = c => String(c.floor).replace('i', '');     // '2i' resta con il 2° piano nei filtri
 function floorText(c){ return T('f' + c.floor) + (c.extra ? ' · ' + c.extra : ''); }
@@ -600,7 +612,10 @@ function dayHTML(s){
 }
 function updateHeader(){
   $('#dayLabel').innerHTML = dayHTML(current);
-  $('#wed').classList.toggle('is-on', current === nextWed(todayISO()));
+  const tags = [];
+  if (current === todayISO()) tags.push(`<span class="tag today">${esc(T('today'))}</span>`);
+  if (CFG && (CFG.groupMass || []).includes(current)) tags.push(`<span class="tag gm">${esc(T('groupMass'))}</span>`);
+  $('#tags').innerHTML = tags.join('');
   $('#next').disabled = current >= lastWed();
 }
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 4500); }
@@ -807,7 +822,6 @@ $('#floors').addEventListener('click', e => {
 });
 $('#prev').addEventListener('click', () => setDate(addDays(current, -7)));
 $('#next').addEventListener('click', () => setDate(addDays(current, 7)));
-$('#wed').addEventListener('click', () => setDate(nextWed(todayISO())));
 $('#gear').addEventListener('click', () => { showSync(); $('#setDlg').showModal(); });
 $('#setClose').addEventListener('click', () => $('#setDlg').close());
 // tocco fuori dalla finestra (sullo sfondo scuro) = chiudi; vale per lingua e dettagli, non per il modulo di prenotazione
