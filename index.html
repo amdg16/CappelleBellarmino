@@ -473,7 +473,7 @@ let lastSync = null;          // null | 'loading' | 'offline' | minuti
 let floorFilter = store.get('floor') || 'all';
 let openId = null;
 let cfgFresh = false;         // la configurazione viene riletta dal server una volta per apertura
-let autoDate = true;          // si sta guardando il mercoledì più vicino: segue il calendario da solo
+let autoDate = true;          // si sta guardando la data predefinita (prossima Messa dei gruppi): segue il calendario da solo
 
 function setCfg(cfg){
   CFG = cfg;
@@ -500,7 +500,10 @@ async function load(silent){
   try {
     const res = await apiGet({ action: cfgFresh ? 'day' : 'init', date: d });
     if (seq !== loadSeq) return;
-    if (res.cfg){ setCfg(res.cfg); cfgFresh = true; }
+    if (res.cfg){
+      setCfg(res.cfg); cfgFresh = true;
+      if (autoDate && current !== defaultDate()){ setDate(defaultDate()); return; }   // ora conosciamo le date delle Messe dei gruppi
+    }
     bookings = res.bookings || [];
     render();
     const n = new Date(); lastSync = n.getHours()*60 + n.getMinutes();
@@ -586,6 +589,14 @@ function blockAt(chapel, s, e){
 }
 function blockLabel(bl){ return bl.key && I18N.it[bl.key] ? T(bl.key) : bl.label; }
 // › arriva solo fino al primo mercoledì non ancora aperto (l'amministratore può andare più avanti)
+// data predefinita: la prossima Messa dei gruppi (oggi compreso); se non ci sono date in elenco, il mercoledì più vicino
+function defaultDate(){
+  const t = todayISO();
+  const next = (CFG && CFG.groupMass || []).filter(x => x >= t).sort()[0];
+  return next || nextWed(t);
+}
+// fin dove arriva ›: il primo mercoledì non ancora aperto, ma almeno fino alla prossima Messa dei gruppi
+function maxDate(){ const a = lastWed(), b = defaultDate(); return a > b ? a : b; }
 function lastWed(){
   let w = nextWed(todayISO());
   if (adminPw) return addDays(w, 7 * 26);
@@ -594,9 +605,9 @@ function lastWed(){
 }
 function setDate(d){
   d = nextWed(d);                               // sempre un mercoledì
-  const max = lastWed(); if (d > max) d = max;
+  const max = maxDate(); if (d > max) d = max;
   current = d; scrollToFocus = true; bookings = [];
-  autoDate = (d === nextWed(todayISO()));
+  autoDate = (d === defaultDate());
   updateHeader();
   render(); load();
 }
@@ -616,7 +627,7 @@ function updateHeader(){
   if (current === todayISO()) tags.push(`<span class="tag today">${esc(T('today'))}</span>`);
   if (CFG && (CFG.groupMass || []).includes(current)) tags.push(`<span class="tag gm">${esc(T('groupMass'))}</span>`);
   $('#tags').innerHTML = tags.join('');
-  $('#next').disabled = current >= lastWed();
+  $('#next').disabled = current >= maxDate();
 }
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 4500); }
 
@@ -833,8 +844,8 @@ $('#larger').addEventListener('click', () => changeScale(1));
 const dialogOpen = () => $('#bookDlg').open || $('#infoDlg').open || $('#setDlg').open;
 function tick(){
   if (document.hidden || dialogOpen()) return;
-  const target = nextWed(todayISO());
-  if (autoDate && current !== target) setDate(target);   // es. è arrivato giovedì: passa al mercoledì successivo
+  const target = defaultDate();
+  if (autoDate && current !== target) setDate(target);   // passata la Messa dei gruppi: si passa alla successiva
   else { updateHeader(); load(true); }
 }
 setInterval(tick, 30000);
@@ -850,7 +861,7 @@ document.addEventListener('visibilitychange', tick);
     return;
   }
   try { const c = JSON.parse(store.get('cfg') || 'null'); if (c && c.chapels) setCfg(c); } catch(e){}
-  setDate(nextWed(todayISO()));      // all'apertura: il mercoledì più vicino (oggi, se è mercoledì)
+  setDate(defaultDate());      // all'apertura: la prossima Messa dei gruppi (oppure il mercoledì più vicino)
 })();
 </script>
 </body>
