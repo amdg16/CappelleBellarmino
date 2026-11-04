@@ -558,6 +558,7 @@ function render(){
     });
   }
   (CFG.blocks || []).forEach(bl => {
+    if (!blockOn(bl, current)) return;
     const k = vis.findIndex(x => x.c.id === bl.chapel);
     if (k < 0) return;
     const s = Math.max(0, (toMin(bl.start) - START) / STEP), e = Math.min(N, (toMin(bl.end) - START) / STEP);
@@ -583,8 +584,9 @@ function render(){
   else { sc.scrollTop = keepTop; sc.scrollLeft = keepLeft; }
 }
 
+function blockOn(b, d){ return (!b.from || d >= b.from) && (!b.until || d <= b.until); }
 function blockAt(chapel, s, e){
-  return (CFG && CFG.blocks || []).find(b => b.chapel === chapel && toMin(b.start) < e && s < toMin(b.end));
+  return (CFG && CFG.blocks || []).find(b => b.chapel === chapel && blockOn(b, current) && toMin(b.start) < e && s < toMin(b.end));
 }
 function blockLabel(bl){ return bl.key && I18N.it[bl.key] ? T(bl.key) : bl.label; }
 // › arriva solo fino al primo mercoledì non ancora aperto (l'amministratore può andare più avanti)
