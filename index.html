@@ -20,7 +20,7 @@
     --bg:#F2F0EF; --paper:#FFFFFF; --ink:#231C1D; --muted:#655B5C;
     --rule:#DDD6D6; --rule-strong:#B9AEAF; --past:#F3F1F1;
     --scale:1;
-    --row:1.25rem; --colw:7.6rem; --timew:3.3rem;
+    --row:1.25rem; --colw:6.8rem; --timew:3.3rem;
   }
   html{font-size:calc(16px * var(--scale));-webkit-text-size-adjust:100%}
   body{font-family:"Alegreya Sans","Segoe UI",system-ui,sans-serif;color:var(--ink);background:var(--bg)}
@@ -63,6 +63,8 @@
   .tag.today{background:var(--red);color:#fff}
   .tag.gm{background:var(--red-tint);color:var(--red-deep);border:1px solid #E7C3C6}
   .tag.gm::before{content:"";width:.45rem;height:.45rem;border-radius:50%;background:var(--red)}
+  .rule{display:flex;gap:.5rem;align-items:flex-start;background:var(--red-tint);color:var(--red-deep);padding:.5rem 1rem;font-size:.88rem;line-height:1.3}
+  .rule .i{flex:none;width:1.05rem;height:1.05rem;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font:700 .7rem/1 "Alegreya Sans",sans-serif;margin-top:.05rem}
   .openNote{margin:0 1rem .45rem;padding:.5rem .7rem;border-radius:.5rem;background:var(--red-tint);color:var(--red-deep);font-size:.95rem;line-height:1.3}
   .openNote[hidden]{display:none}
   .foot{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.15rem 1rem .6rem;color:#7A6E6F;font-size:.85rem}
@@ -142,7 +144,7 @@
     :root{--colw:7.3rem;--timew:2.9rem} .ch{padding-left:.4rem;padding-right:.35rem} .ch b{font-size:.86rem}
     .band{padding-left:.7rem;padding-right:.7rem;gap:.6rem} .band img{height:2.6rem}
     .band small{font-size:.75rem} .gear .code{display:none}
-    .dateRow,.tags,.bar,.floors,.sync{padding-left:.6rem;padding-right:.6rem} .tags{display:flex;flex-wrap:wrap;gap:.35rem;padding:.3rem 1rem 0}
+    .dateRow,.tags,.bar,.floors,.sync,.rule{padding-left:.6rem;padding-right:.6rem} .tags{display:flex;flex-wrap:wrap;gap:.35rem;padding:.3rem 1rem 0}
   .tags:empty{display:none}
   .tag{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.15rem .65rem;font-size:.88rem;font-weight:500;line-height:1.3}
   .tag.today{background:var(--red);color:#fff}
@@ -162,6 +164,7 @@
   </div>
   <button class="gear" id="gear">🌐 IT</button>
 </header>
+<div class="rule"><span class="i" aria-hidden="true">i</span><span data-t="rule"></span></div>
 <div class="dateRow">
   <div class="day" id="dayLabel">…</div>
 </div>
@@ -176,7 +179,6 @@
   <span class="size"><button id="smaller">A−</button><button id="larger">A+</button></span>
 </div>
 
-<div class="openNote" id="openNote" role="status" hidden></div>
 <div class="dots" id="dots" hidden></div>
 <div class="gridWrap">
   <div class="scroller" id="scroller"><div class="grid" id="grid"></div></div>
@@ -264,7 +266,7 @@ const I18N = {
     admin:'Accesso amministratore', adminExit:'Esci da amministratore', adminExitShort:'Esci', adminPrompt:'Password amministratore',
     adminOn:'Modalità amministratore attiva.', adminOff:'Modalità amministratore disattivata.',
     taken:'Occupata da {0} ({1}–{2}).', tooLate:'Termina dopo le {t}: scegli una durata più breve.',
-    past:'Questo orario è già passato.', suoreBlock:'Suore · Messa e Vespri', blocked:'Questa fascia è riservata: {l} ({s}–{e}).', E_WEEKDAY:'Si può prenotare solo il mercoledì.', notYet:'Le prenotazioni sono possibili dalle 7:00 del mattino di una settimana prima.', groupDay:'Il gruppo {g} ha già una prenotazione in questo giorno ({c}, {s}–{e}). Per cambiarla, cancella prima quella.', needGroup:'Scegli il gruppo.', needName:'Scrivi il tuo nome.',
+    past:'Questo orario è già passato.', suoreBlock:'Suore · Messa e Vespri', blocked:'Questa fascia è riservata: {l} ({s}–{e}).', E_WEEKDAY:'Si può prenotare solo il mercoledì.', rule:'Le prenotazioni per la Messa dei gruppi si aprono alle 7:00 di una settimana prima.', notYet:'Le prenotazioni sono possibili dalle 7:00 del mattino di una settimana prima.', groupDay:'Il gruppo {g} ha già una prenotazione in questo giorno ({c}, {s}–{e}). Per cambiarla, cancella prima quella.', needGroup:'Scegli il gruppo.', needName:'Scrivi il tuo nome.',
     f0:'Pianterreno', f1:'1° piano', f2:'2° piano', f2i:'Secondo intermedio', f3:'3° piano',
     E_DATE:'Data non valida.', E_PAST:'Non si può prenotare nel passato.', E_CHAPEL:'Cappella non valida.',
     E_START:'Orario di inizio non valido.', E_DUR:'Durata non valida.', E_RANGE:'Orario fuori dalla fascia consentita.',
@@ -291,7 +293,7 @@ const I18N = {
     admin:'Admin sign-in', adminExit:'Sign out of admin', adminExitShort:'Sign out', adminPrompt:'Admin password',
     adminOn:'Admin mode on.', adminOff:'Admin mode off.',
     taken:'Taken by {0} ({1}–{2}).', tooLate:'Ends after {t}: choose a shorter duration.',
-    past:'This time has already passed.', suoreBlock:'Sisters · Mass and Vespers', blocked:'This time is reserved: {l} ({s}–{e}).', E_WEEKDAY:'Bookings are only for Wednesdays.', notYet:'Bookings open at 7:00 a.m., one week before the day.', groupDay:'The group {g} already has a booking on this day ({c}, {s}–{e}). To change it, delete that one first.', needGroup:'Choose a group.', needName:'Enter your name.',
+    past:'This time has already passed.', suoreBlock:'Sisters · Mass and Vespers', blocked:'This time is reserved: {l} ({s}–{e}).', E_WEEKDAY:'Bookings are only for Wednesdays.', rule:'Bookings for the sharing-group Mass open at 7:00 a.m., one week before.', notYet:'Bookings open at 7:00 a.m., one week before the day.', groupDay:'The group {g} already has a booking on this day ({c}, {s}–{e}). To change it, delete that one first.', needGroup:'Choose a group.', needName:'Enter your name.',
     f0:'Ground floor', f1:'1st floor', f2:'2nd floor', f2i:'2nd floor, intermediate level', f3:'3rd floor',
     E_DATE:'Invalid date.', E_PAST:'Bookings in the past are not allowed.', E_CHAPEL:'Invalid chapel.',
     E_START:'Invalid start time.', E_DUR:'Invalid duration.', E_RANGE:'Time outside the allowed hours.',
@@ -318,7 +320,7 @@ const I18N = {
     admin:'Accès administrateur', adminExit:'Quitter le mode administrateur', adminExitShort:'Quitter', adminPrompt:'Mot de passe administrateur',
     adminOn:'Mode administrateur activé.', adminOff:'Mode administrateur désactivé.',
     taken:'Occupée par {0} ({1}–{2}).', tooLate:'Se termine après {t} : choisissez une durée plus courte.',
-    past:'Cet horaire est déjà passé.', suoreBlock:'Sœurs · Messe et Vêpres', blocked:'Ce créneau est réservé : {l} ({s}–{e}).', E_WEEKDAY:'On ne peut réserver que le mercredi.', notYet:'Les réservations ouvrent à 7 h du matin, une semaine avant le jour.', groupDay:'Le groupe {g} a déjà une réservation ce jour-là ({c}, {s}–{e}). Pour la changer, supprimez-la d’abord.', needGroup:'Choisissez un groupe.', needName:'Indiquez votre nom.',
+    past:'Cet horaire est déjà passé.', suoreBlock:'Sœurs · Messe et Vêpres', blocked:'Ce créneau est réservé : {l} ({s}–{e}).', E_WEEKDAY:'On ne peut réserver que le mercredi.', rule:'Les réservations pour la Messe des groupes ouvrent à 7 h du matin, une semaine avant.', notYet:'Les réservations ouvrent à 7 h du matin, une semaine avant le jour.', groupDay:'Le groupe {g} a déjà une réservation ce jour-là ({c}, {s}–{e}). Pour la changer, supprimez-la d’abord.', needGroup:'Choisissez un groupe.', needName:'Indiquez votre nom.',
     f0:'Rez-de-chaussée', f1:'1er étage', f2:'2e étage', f2i:'2e étage, niveau intermédiaire', f3:'3e étage',
     E_DATE:'Date non valide.', E_PAST:'Impossible de réserver dans le passé.', E_CHAPEL:'Chapelle non valide.',
     E_START:'Heure de début non valide.', E_DUR:'Durée non valide.', E_RANGE:'Horaire en dehors de la plage autorisée.',
@@ -345,7 +347,7 @@ const I18N = {
     admin:'Acceso de administrador', adminExit:'Salir del modo administrador', adminExitShort:'Salir', adminPrompt:'Contraseña de administrador',
     adminOn:'Modo administrador activado.', adminOff:'Modo administrador desactivado.',
     taken:'Ocupada por {0} ({1}–{2}).', tooLate:'Termina después de las {t}: elige una duración más corta.',
-    past:'Esta hora ya ha pasado.', suoreBlock:'Hermanas · Misa y Vísperas', blocked:'Esta franja está reservada: {l} ({s}–{e}).', E_WEEKDAY:'Solo se puede reservar los miércoles.', notYet:'Las reservas se abren a las 7:00 de la mañana, una semana antes.', groupDay:'El grupo {g} ya tiene una reserva este día ({c}, {s}–{e}). Para cambiarla, elimina primero esa.', needGroup:'Elige un grupo.', needName:'Escribe tu nombre.',
+    past:'Esta hora ya ha pasado.', suoreBlock:'Hermanas · Misa y Vísperas', blocked:'Esta franja está reservada: {l} ({s}–{e}).', E_WEEKDAY:'Solo se puede reservar los miércoles.', rule:'Las reservas para la Misa de los grupos se abren a las 7:00 de la mañana, una semana antes.', notYet:'Las reservas se abren a las 7:00 de la mañana, una semana antes.', groupDay:'El grupo {g} ya tiene una reserva este día ({c}, {s}–{e}). Para cambiarla, elimina primero esa.', needGroup:'Elige un grupo.', needName:'Escribe tu nombre.',
     f0:'Planta baja', f1:'1.ª planta', f2:'2.ª planta', f2i:'2.ª planta, nivel intermedio', f3:'3.ª planta',
     E_DATE:'Fecha no válida.', E_PAST:'No se puede reservar en el pasado.', E_CHAPEL:'Capilla no válida.',
     E_START:'Hora de inicio no válida.', E_DUR:'Duración no válida.', E_RANGE:'Horario fuera de la franja permitida.',
@@ -541,9 +543,6 @@ function render(){
   grid.style.setProperty('--n', N);
   const now = nowMinFor(current);
   const open = isOpen(current);
-  const note = $('#openNote');
-  note.hidden = open || current < todayISO();
-  if (!note.hidden) note.textContent = T('notYet');
   let h = '<div class="corner"></div>';
   vis.forEach(({ c }, k) => {
     h += `<div class="ch" style="grid-column:${k+2}"><b>${esc(c.short)}</b><small>${esc(T('f' + c.floor))}</small>${c.extra ? `<small class="x">${esc(c.extra)}</small>` : ''}</div>`;
@@ -605,7 +604,10 @@ function stepDate(dir){
   }
   return addDays(current, 7 * dir);
 }
-function maxDate(){ const a = lastWed(), b = defaultDate(); return a > b ? a : b; }
+function maxDate(){
+  if (groupMode()) return (CFG.groupMass || []).slice().sort().pop();   // tutte le Messe dei gruppi in elenco si possono vedere
+  const a = lastWed(), b = defaultDate(); return a > b ? a : b;
+}
 function lastWed(){
   let w = nextWed(todayISO());
   if (adminPw) return addDays(w, 7 * 26);
